@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
-#include "../SFML Project Template (VS2015)1/Main.cpp"
+#include "../A Star Pathfinding/Main.cpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

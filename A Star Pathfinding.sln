@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SFML Project Template (VS2015)1", "SFML Project Template (VS2015)1\SFML Project Template (VS2015)1.vcxproj", "{7350B417-86B9-4F40-A795-5DA67BDAFD7F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A Star Pathfinding", "A Star Pathfinding\A Star Pathfinding.vcxproj", "{7350B417-86B9-4F40-A795-5DA67BDAFD7F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest1", "UnitTest1\UnitTest1.vcxproj", "{CB774BEC-E46E-46BF-9A94-30DBE3ED2F85}"
 EndProject
