@@ -1,19 +1,263 @@
 #include <SFML/Graphics.hpp>
 #include "ParticleSystem.cpp"
+#include "VectorMath.cpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <list>
 #include <map>
 #include <vector>
+#include <math.h>
+
 using namespace std;
 
 typedef pair<int, int> vec2;
 
+#define M_PI 3.14159265358979323846   // pi
 const int mapHeight = 50;
 const int mapWidth = 50;
 const int cellHeightWidth = 10;
+const int cellHeightWidthHalf = cellHeightWidth/2;
+
+class Enemy {
+public:
+	float health = 100;
+	bool toDelete = false;
+	const float mass = 1;
+	const float max_force = 10;
+	float max_speed = 0.5;
+	float heading; //angle
+	float boundingRadius = cellHeightWidth / 2;
+	sf::Vector2f center;
+	sf::Vector2f velocity = sf::Vector2f(0.1,0);
+	sf::Vector2f forward = sf::Vector2f(1, 0);
+	sf::Vector2f side;
+	sf::Vector2f up = sf::Vector2f(0,1);
+	float speed = 5;
+	sf::RectangleShape baseRect;
+	sf::Vector2f position;
+	vector<sf::Vector2f> currentPath;
+	float rotation;
+	const float rotationOffset = 90;
+	Enemy() {}
+	~Enemy() {}
+	Enemy(sf::Vector2f pos) {
+		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidth, cellHeightWidth));
+		position = pos;
+		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
+		baseRect.setPosition(pos.x, pos.y);
+		baseRect.setFillColor(sf::Color::Blue);
+		baseRect.setOutlineColor(sf::Color::Blue);
+		baseRect.setOutlineThickness(1);
+	}
+
+	void draw(sf::RenderWindow& window) {
+		window.draw(baseRect);
+	}
+
+	void rotateToFaceTarget(sf::Vector2<float> target) {
+		float dx = position.x - target.x;
+		float dy = position.y - target.y;
+
+		rotation = (atan2(dy, dx)) * 180 / M_PI;
+		baseRect.setRotation(rotation + rotationOffset);
+	}
+
+	sf::Vector2f seek(sf::Vector2f from, sf::Vector2f to, float length) {
+		return Math::normalize(from - to) * length;
+	}
+	sf::Vector2f seek(sf::Vector2f to) {
+		return Math::normalize(to - position) * max_speed;
+	}
+
+	void update() {
+
+		if (health <= 0)
+		{
+			toDelete = true;
+		}
+
+		sf::Vector2f desired_velocity;
+		sf::Vector2f steering;
+		//path progression
+		if (Math::length(currentPath[0] - position) < 0.25)
+		{
+			currentPath.erase(currentPath.begin());
+		}
+		if (currentPath.empty())
+			currentPath.push_back(sf::Vector2f(500, 500));
+
+		//seek
+		desired_velocity = seek(currentPath[0]);
+		steering = desired_velocity - velocity;
+
+		//combine forces
+		steering = Math::truncate(steering, max_force);
+		steering = steering / mass;
+		velocity = Math::truncate(velocity + steering, max_speed);
+		UpdatePosition(position + velocity);
+	}
+
+	void UpdatePosition(sf::Vector2f p){
+		position = p;
+		baseRect.setPosition(position);
+	}
+	void Hit(const float dmg) {
+		health -= dmg;
+	}
+};
+
+class Bullet {
+	sf::RectangleShape baseRect;
+	shared_ptr<Enemy> target;
+	float rotation;
+	sf::Vector2f velocity;
+	const float rotationOffset = 90;
+	float max_speed = 10;
+	const float max_force = 10;
+	float distanceTravelled = 0;
+	float distanceToTravel = 0;
+	const float damage = 10;
+
+public:
+	bool toDelete = false;
+	sf::Vector2f position;
+
+	Bullet() {}
+	~Bullet() {}
+	Bullet(sf::Vector2f pos, shared_ptr<Enemy> tar, float _distanceToTravel) {
+		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
+		position = pos;
+		target = tar;
+		distanceToTravel = _distanceToTravel;
+		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
+		baseRect.setPosition(pos.x, pos.y);
+		baseRect.setFillColor(sf::Color::White);
+		baseRect.setOutlineColor(sf::Color::White);
+		baseRect.setOutlineThickness(1);
+		baseRect.rotate(rotation);
+	}
+
+	sf::Vector2f seek(sf::Vector2f to) {
+		return Math::normalize(to - position) * max_speed;
+	}
+
+	void print() {
+		cout << position << endl << velocity << endl;
+	}
+
+	void update() {
+		sf::Vector2f desired_velocity;
+		sf::Vector2f steering;
+		//path progression
+		if (Math::length(target->position - position) < 0.2)
+		{
+			toDelete = true;
+			target->Hit(damage);
+		}
+
+		//seek
+		desired_velocity = seek(target->position);
+		steering = desired_velocity - velocity;
+
+		//combine forces
+		steering = Math::truncate(steering, max_force);
+		velocity = Math::truncate(velocity + steering, max_speed);
+		UpdatePosition(position + velocity);
+	}
+
+	void draw(sf::RenderWindow& window) {
+		window.draw(baseRect);
+	}
+
+	void UpdatePosition(sf::Vector2f p) {
+		distanceTravelled += Math::length(p);
+		position = p;
+		baseRect.setPosition(position);
+	}
+};
+
+class Turret {
+	sf::RectangleShape baseRect;
+	sf::RectangleShape topRect;
+	sf::Vector2f position;
+	float rotation;
+	double cooldownTime = 1000;
+	double cooldownTimer = 0;
+	bool isReady = true;
+	const float rotationOffset = 90;
+	list<Bullet> deadAmmo;
+public:
+	list<shared_ptr<Bullet>> ammo;
+	shared_ptr<Enemy> target;
+	bool activeTarget;
+	Turret() {}
+	~Turret() {}
+	Turret(sf::Vector2f pos) {
+		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
+		topRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf*3));
+		position = pos;
+		topRect.setOrigin(sf::Vector2f(topRect.getSize().x / 2, topRect.getSize().y / 2));
+		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
+		baseRect.setPosition(pos.x, pos.y);
+		topRect.setPosition(pos.x, pos.y);
+		baseRect.setFillColor(sf::Color::Blue);
+		baseRect.setOutlineColor(sf::Color::Blue);
+		baseRect.setOutlineThickness(1);
+		topRect.setFillColor(sf::Color::Cyan);
+		topRect.rotate(rotation);
+	}
+
+	void draw(sf::RenderWindow& window) {
+		window.draw(baseRect);
+		window.draw(topRect);
+		for each (auto b in ammo)
+		{
+			b->draw(window);
+		}
+	}
+
+	void rotateToFaceTarget(sf::Vector2<float> target) {
+		float dx = position.x - target.x;
+		float dy = position.y - target.y;
+
+		rotation = (atan2(dy, dx)) * 180 / M_PI;
+		topRect.setRotation(rotation + rotationOffset);
+	}
+
+	void update(double elapsedTime) {
+		if (!isReady) {
+			cooldownTimer += elapsedTime;
+			if (cooldownTimer > cooldownTime)
+			{
+				isReady = true;
+				cooldownTimer = 0;
+			}
+		}
+		else
+		{
+			// SHOOT
+			if (activeTarget && isReady)
+			{
+				ammo.push_back(make_shared<Bullet>(position, target, Math::length(target->position - position)));
+				isReady = false;
+			}
+		}
+		std::list<shared_ptr<Bullet>>::iterator it = ammo.begin();
+		while (it != ammo.end())
+		{
+			if (it->get()->toDelete)
+			{
+				ammo.erase(it);
+			}
+			it->get()->update();
+			it++;
+		}
+		ammo.remove_if([](shared_ptr<Bullet> elem) { if (elem->toDelete) return true; else return false; });
+	}
+};
 
 std::vector<vec2> reconstruct_path(std::map<vec2, vec2> cameFrom,
 	vec2 current) {
@@ -324,13 +568,15 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 	}
 	return std::vector<vec2>();
 }
+std::vector<Turret>turrets;
+std::vector<shared_ptr<Enemy>>enemies;
 
 int main(int argc, char **argv)
 {
 	int map[mapHeight][mapWidth];
 
-	vec2 start = vec2(2, 2);
-	vec2 end = vec2(25, 28);
+	vec2 start = vec2(0, 0);
+	vec2 end = vec2(4, 4);
 
 	if (argc == 5) {
 		start.first  = atoi(argv[1]);
@@ -339,10 +585,36 @@ int main(int argc, char **argv)
 		end.second   = atoi(argv[4]);
 	}
 
+	for (int y = 0; y < mapHeight; y+=10)
+	{
+		for (int x = 0; x < mapWidth; x+=10)
+		{
+			turrets.push_back(Turret(sf::Vector2f(x * cellHeightWidth + cellHeightWidthHalf, y * cellHeightWidth + cellHeightWidthHalf)));
+		}
+	}
+
+	for (int e = 0; e < 1; e++)
+	{
+		enemies.push_back(make_shared<Enemy>(sf::Vector2f(100, 100)));
+	}
+
     // create the window
     sf::RenderWindow window(sf::VideoMode(mapWidth* cellHeightWidth, mapHeight* cellHeightWidth), "A* Pathfinding");
-
+	
+	// create screen buffer margin
+	float buffer_width = 50;
+	sf::RectangleShape screen_boundary(sf::Vector2f(mapWidth* cellHeightWidth - buffer_width, 
+													mapHeight* cellHeightWidth - buffer_width));
+	screen_boundary.setPosition(sf::Vector2f(buffer_width, buffer_width));
 	std::vector<vec2> completed_path = A_Star(window, start, end);
+
+	for (int e = 0; e < 1; e++)
+	{
+		for (vec2 v : completed_path)
+		{
+			enemies[e]->currentPath.insert(enemies[e]->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+		}
+	}
 
     // create the particle system
     ParticleSystem particles(1000);
@@ -361,28 +633,66 @@ int main(int argc, char **argv)
         {
             if(event.type == sf::Event::Closed)
                 window.close();
+
+			// New Path
 			if (event.mouseButton.button == sf::Mouse::Button::Left && event.type == event.MouseButtonPressed)
 			{
 				end.first = sf::Mouse::getPosition(window).x / cellHeightWidth;
 				end.second = sf::Mouse::getPosition(window).y / cellHeightWidth;
 				completed_path = A_Star(window, start, end);
+				for (size_t i = 0; i < enemies.size(); i++)
+				{
+					enemies[i]->UpdatePosition(sf::Vector2f(0, 0));
+				}
+				for (int e = 0; e < 1; e++)
+				{
+					for (vec2 v : completed_path)
+					{
+						enemies[e]->currentPath.insert(enemies[e]->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+					}
+				}
 			}
         }
 
 		// make the particle system emitter follow the mouse
-		sf::Vector2i mouse = sf::Mouse::getPosition(window);
-
+		sf::Vector2f mouse = (sf::Vector2f)sf::Mouse::getPosition(window);
         // update it
         sf::Time elapsed = clock.restart();
         particles.update(elapsed);
 
         // draw it
-		//display_route(completed_path, end);
-
-		display_route2D(window, completed_path, end, mouse);
-		particles.setEmitter(window.mapPixelToCoords(mouse));
-
+		display_route2D(window, completed_path, end, (sf::Vector2i)mouse);
+		particles.setEmitter(window.mapPixelToCoords((sf::Vector2i)mouse));
         window.draw(particles);
+
+		for (size_t i = 0; i < turrets.size(); i++)
+		{
+			if (!enemies.empty())
+			{
+				turrets[i].target = enemies[0];
+				turrets[i].activeTarget = true;
+			}
+			turrets[i].update(elapsed.asMilliseconds());
+			turrets[i].rotateToFaceTarget(enemies[0]->position); //DEBUG
+			turrets[i].draw(window);
+		}
+
+		for (size_t i = 0; i < enemies.size(); i++)
+		{
+			enemies[i]->update();
+			//e.UpdatePosition(Math::clamp(e.position, screen_boundary.getSize(), screen_boundary.getPosition()));
+			enemies[i]->draw(window);
+		}
+
+		auto it = enemies.begin();
+		while (it != enemies.end())
+		{
+			if (it->get()->toDelete) {
+				enemies.erase(it);
+			}
+			it++;
+		}
+
         window.display();
     }
 
