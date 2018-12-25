@@ -20,6 +20,9 @@ const int mapHeight = 50;
 const int mapWidth = 50;
 const int cellHeightWidth = 10;
 const int cellHeightWidthHalf = cellHeightWidth/2;
+const int screenWidth = mapWidth * cellHeightWidth;
+const int screenHeight = mapHeight * cellHeightWidth;
+
 
 class Enemy {
 public:
@@ -191,7 +194,6 @@ public:
 6 	Orange 	61-65
 7 	Dark Orange 	66-100
 8 	Pearlescent 	101+
-
 */
 class Turret {
 	sf::RectangleShape baseRect;
@@ -375,7 +377,7 @@ void display_route2D(sf::RenderWindow& window, std::vector<vec2> path, vec2 goal
 			float tly = y * cellHeightWidth;
 
 			//GRID
-			sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
+			/*sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
 
 			std::vector<vec2>::iterator findInPath =
 				std::find(path.begin(), path.end(), vec2(x, y));
@@ -394,7 +396,7 @@ void display_route2D(sf::RenderWindow& window, std::vector<vec2> path, vec2 goal
 				rect.setFillColor(sf::Color::White);
 				rect.setPosition(tlx, tly);
 				window.draw(rect);
-			}
+			}*/
 
 			//GRIDLINES
 			sf::Vertex line[] =
@@ -466,21 +468,31 @@ void display_route_in_progress(
 			}
 			text.setPosition(tlx, tly);
 			window.draw(text);
-			
-			//GRIDLINES
-			sf::Vertex line[] =
-			{
-				sf::Vertex(sf::Vector2f(tlx, tly)),
-				sf::Vertex(sf::Vector2f(tlx + cellHeightWidth, tly)),
-				sf::Vertex(sf::Vector2f(tlx, tly)),
-				sf::Vertex(sf::Vector2f(tlx, tly + cellHeightWidth))
-			};
-			window.draw(line, 4, sf::Lines);
-
 		}
 	}
 	window.display();
 	//system("pause");
+}
+
+void draw_gridlines(sf::RenderWindow& window)
+{
+	for (int y = mapHeight; y > -1; --y) {
+		for (int x = 0; x < mapWidth; ++x) {
+			float tlx = x * cellHeightWidth;
+			float tly = y * cellHeightWidth;
+			sf::Color trans(255, 255, 255, 50);
+
+			//GRIDLINES
+			sf::Vertex line[] =
+			{
+				sf::Vertex(sf::Vector2f(tlx, tly),trans),
+				sf::Vertex(sf::Vector2f(tlx + cellHeightWidth, tly),trans),
+				sf::Vertex(sf::Vector2f(tlx, tly),trans),
+				sf::Vertex(sf::Vector2f(tlx, tly + cellHeightWidth),trans)
+			};
+			window.draw(line, 4, sf::Lines);
+		}
+	}
 }
 
 vec2 find_lowest_node_by_fScore(std::vector<vec2> openSet,
@@ -620,8 +632,33 @@ int main(int argc, char **argv)
 	sf::RectangleShape screen_boundary(sf::Vector2f(mapWidth* cellHeightWidth - buffer_width, 
 													mapHeight* cellHeightWidth - buffer_width));
 	screen_boundary.setPosition(sf::Vector2f(buffer_width, buffer_width));
+
+	// create screen background
+	sf::Texture bgtexture;
+	if (!bgtexture.loadFromFile("Resources/output-0.png"))
+	{
+		cout << "File not found" << endl;
+	}
+	bgtexture.setSmooth(true);
+	sf::Sprite bgsprite;
+	bgsprite.setTexture(bgtexture);
+
+	// Create goal texture
+	sf::Texture goalTexture;
+	if (!goalTexture.loadFromFile("Resources/output-13.png"))
+	{
+		cout << "File not found" << endl;
+	}
+	goalTexture.setSmooth(true);
+	sf::Sprite goalSprite;
+	goalSprite.setTexture(goalTexture);
+	goalSprite.setPosition(sf::Vector2f(screenHeight - goalTexture.getSize().x / 2,
+										screenWidth - goalTexture.getSize().y / 2));
+
+	//Find Path to Goal
 	std::vector<vec2> completed_path = A_Star(window, start, end);
 
+	//Give Path to Enemies
 	auto it = enemies.begin();
 	for (int e = 0; e < 1; e++)
 	{
@@ -678,7 +715,10 @@ int main(int argc, char **argv)
         particles.update(elapsed);
 
         // draw it
-		display_route2D(window, completed_path, end, (sf::Vector2i)mouse);
+		window.draw(bgsprite);
+		window.draw(goalSprite);
+		//display_route2D(window, completed_path, end, (sf::Vector2i)mouse);
+		draw_gridlines(window);
 		particles.setEmitter(window.mapPixelToCoords((sf::Vector2i)mouse));
         window.draw(particles);
 

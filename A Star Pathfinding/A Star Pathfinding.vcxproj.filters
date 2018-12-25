@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="VectorMath.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{089714d6-9b85-4de4-8316-08fe308b9953}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\output-0.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-1.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-2.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-3.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-4.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-5.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-6.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-7.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-8.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-9.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-10.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-11.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-12.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-13.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-14.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-15.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-16.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-17.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-18.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-19.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-20.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-21.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-22.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-23.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-24.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-25.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-26.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-27.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-28.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-29.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-30.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-31.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-32.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-33.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-34.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-35.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-36.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-37.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-38.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-39.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-40.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-41.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-42.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-43.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-44.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-45.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-46.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-47.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-48.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-49.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-50.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-51.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-52.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-53.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-54.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-55.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-56.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-57.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-58.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-59.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-60.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-61.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-62.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-63.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-64.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-65.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-66.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-67.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-68.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-69.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-70.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-71.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-72.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-73.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-74.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-75.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-76.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-77.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-78.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-79.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-80.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-81.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-82.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-83.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-84.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-85.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-86.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-87.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-88.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-89.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-90.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-91.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-92.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-93.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\output-94.png">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
