@@ -23,10 +23,32 @@ const int cellHeightWidthHalf = cellHeightWidth/2;
 const int screenWidth = mapWidth * cellHeightWidth;
 const int screenHeight = mapHeight * cellHeightWidth;
 
+class Level {
+	float	enemyHealthModifier = 1;
+	float	enemyRateModifier = -1000;
+	float	enemyNumberModifier = 5;
+	float	enemySpeedModifier = 1;
+public:
+	float	enemyNumber = 5;
+	float	enemySpeed = 0.5;
+	float	enemyHealth = 0.1;
+	float	enemyTimer = 0;
+	float	enemyRate = 1000;			// seconds between enemies
+	int		levelNumber = 1;			// incremental level number
+	bool	completed = false;
+
+	void IncreaseLevel()
+	{
+		levelNumber++;
+		enemyHealth += enemyHealthModifier;
+		enemyRate += enemyRateModifier;
+		enemyNumber += enemyNumberModifier;
+	}
+};
 
 class Enemy {
 public:
-	float health = 100;
+	float health;
 	bool toDelete = false;
 	const float mass = 1;
 	const float max_force = 10;
@@ -46,7 +68,7 @@ public:
 	const float rotationOffset = 90;
 	Enemy() {}
 	~Enemy() {}
-	Enemy(sf::Vector2f pos) {
+	Enemy(sf::Vector2f pos, float _health, float _max_speed) {
 		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidth, cellHeightWidth));
 		position = pos;
 		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
@@ -54,6 +76,8 @@ public:
 		baseRect.setFillColor(sf::Color::Blue);
 		baseRect.setOutlineColor(sf::Color::Blue);
 		baseRect.setOutlineThickness(1);
+		health = _health;
+		max_speed = _max_speed;
 	}
 
 	void draw(sf::RenderWindow& window) {
@@ -76,22 +100,17 @@ public:
 	}
 
 	void update() {
-
-		if (health <= 0)
-		{
-			toDelete = true;
-		}
-
 		sf::Vector2f desired_velocity;
 		sf::Vector2f steering;
 		//path progression
+		if (currentPath.empty())
+			currentPath.push_back(sf::Vector2f(500, 500));
 		if (Math::length(currentPath[0] - position) < 0.25)
 		{
 			currentPath.erase(currentPath.begin());
 		}
 		if (currentPath.empty())
 			currentPath.push_back(sf::Vector2f(500, 500));
-
 		//seek
 		desired_velocity = seek(currentPath[0]);
 		steering = desired_velocity - velocity;
@@ -109,10 +128,20 @@ public:
 	}
 	void Hit(const float dmg) {
 		health -= dmg;
+
+		if (health <= 0)
+		{
+			toDelete = true;
+		}
+
+		//cout << "Enemy:" << this << "Heath: " << health << (toDelete ?  "DEAD" : "") << endl;
 	}
 };
 
 class Bullet {
+	sf::Texture* bulletTexture = new sf::Texture();
+	sf::Sprite* bulletSprite = new sf::Sprite();
+	
 	sf::RectangleShape baseRect;
 	shared_ptr<Enemy> target;
 	float rotation;
@@ -142,6 +171,17 @@ public:
 		baseRect.setOutlineColor(sf::Color::White);
 		baseRect.setOutlineThickness(1);
 		baseRect.rotate(rotation);
+
+		if (!bulletTexture->loadFromFile("Resources/output-46.png")) {
+			cout << "File not found" << endl;
+		}
+		bulletTexture->setSmooth(true);
+		bulletSprite->setTexture(*bulletTexture);
+		bulletSprite->setOrigin(sf::Vector2f(bulletTexture->getSize().x / 2,
+			bulletTexture->getSize().y / 2));
+		bulletSprite->setPosition(position);
+		bulletSprite->setScale(2, 2);
+		bulletSprite->setRotation(rotation);
 	}
 
 	sf::Vector2f seek(sf::Vector2f to) {
@@ -150,6 +190,15 @@ public:
 
 	void print() {
 		cout << position << endl << velocity << endl;
+	}
+
+	void RotateToFaceTarget(sf::Vector2<float> target) {
+		float dx = position.x - target.x;
+		float dy = position.y - target.y;
+
+		rotation = (atan2(dy, dx)) * 180 / M_PI;
+		baseRect.setRotation(rotation + rotationOffset);
+		bulletSprite->setRotation(rotation - 90);
 	}
 
 	void update() {
@@ -171,10 +220,12 @@ public:
 		steering = Math::truncate(steering, max_force);
 		velocity = Math::truncate(velocity + steering, max_speed);
 		UpdatePosition(position + velocity);
+		RotateToFaceTarget(position + velocity);
 	}
 
 	void draw(sf::RenderWindow& window) {
-		window.draw(baseRect);
+		//window.draw(baseRect);
+		window.draw(*bulletSprite);
 	}
 
 	void UpdatePosition(sf::Vector2f p) {
@@ -182,6 +233,7 @@ public:
 		steps++;
 		position = p;
 		baseRect.setPosition(position);
+		bulletSprite->setPosition(position);
 	}
 };
 
@@ -196,6 +248,9 @@ public:
 8 	Pearlescent 	101+
 */
 class Turret {
+	sf::Texture* turretTexture = new sf::Texture();
+	sf::Sprite* turretSprite = new sf::Sprite();
+
 	sf::RectangleShape baseRect;
 	sf::RectangleShape topRect;
 	float rotation;
@@ -224,15 +279,28 @@ public:
 		baseRect.setOutlineThickness(1);
 		topRect.setFillColor(sf::Color::Cyan);
 		topRect.rotate(rotation);
+
+		if (!turretTexture->loadFromFile("Resources/output-51.png"))
+		{
+			cout << "File not found" << endl;
+		}
+		turretTexture->setSmooth(true);
+		turretSprite->setTexture(*turretTexture);
+		turretSprite->setOrigin(sf::Vector2f(turretTexture->getSize().x / 2,
+											turretTexture->getSize().y / 2));
+		turretSprite->setPosition(position);
+		turretSprite->setScale(0.5, 0.5);
 	}
 
 	void draw(sf::RenderWindow& window) {
-		window.draw(baseRect);
-		window.draw(topRect);
+		//window.draw(baseRect);
+		//window.draw(topRect);
+		window.draw(*turretSprite);
 		for each (auto b in ammo)
 		{
 			b->draw(window);
 		}
+
 	}
 
 	void rotateToFaceTarget(sf::Vector2<float> target) {
@@ -241,6 +309,7 @@ public:
 
 		rotation = (atan2(dy, dx)) * 180 / M_PI;
 		topRect.setRotation(rotation + rotationOffset);
+		turretSprite->setRotation(rotation - 90 );
 	}
 
 	void update(double elapsedTime) {
@@ -594,8 +663,9 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 	}
 	return std::vector<vec2>();
 }
-std::vector<Turret>turrets;
-std::list<shared_ptr<Enemy>>enemies;
+std::vector<Turret>	turrets;
+std::list<shared_ptr<Enemy>> enemies;
+std::list<shared_ptr<Enemy>> preppedEnemies;
 
 int main(int argc, char **argv)
 {
@@ -611,31 +681,42 @@ int main(int argc, char **argv)
 		end.second   = atoi(argv[4]);
 	}
 
-	for (int y = 0; y < mapHeight; y+=10)
+	// create the window
+	sf::RenderWindow window(sf::VideoMode(mapWidth* cellHeightWidth, mapHeight* cellHeightWidth), "A* Pathfinding");
+
+	// create screen buffer margin
+	float buffer_width = 50;
+	sf::RectangleShape screen_boundary(sf::Vector2f(mapWidth* cellHeightWidth - buffer_width,
+		mapHeight* cellHeightWidth - buffer_width));
+	screen_boundary.setPosition(sf::Vector2f(buffer_width, buffer_width));
+
+	Level levelTracker;
+
+	//Debug Turrets
+	//for (int y = 0; y < mapHeight; y+=10)
+	//{
+	//	for (int x = 0; x < mapWidth; x+=10)
+	//	{
+	//		turrets.push_back(Turret(sf::Vector2f(x * cellHeightWidth + cellHeightWidthHalf, y * cellHeightWidth + cellHeightWidthHalf)));
+	//	}
+	//}
+	turrets.push_back(Turret(sf::Vector2f(50 * cellHeightWidth, 50 * cellHeightWidth)));
+
+
+	for (size_t i = 0; i < levelTracker.enemyNumber; i++)
 	{
-		for (int x = 0; x < mapWidth; x+=10)
-		{
-			turrets.push_back(Turret(sf::Vector2f(x * cellHeightWidth + cellHeightWidthHalf, y * cellHeightWidth + cellHeightWidthHalf)));
-		}
+		preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first, start.second), levelTracker.enemyHealth, levelTracker.enemySpeed));
 	}
 
 	for (int e = 0; e < 1; e++)
 	{
-		enemies.push_back(make_shared<Enemy>(sf::Vector2f(100, 100)));
+		enemies.push_back(preppedEnemies.back());
+		preppedEnemies.pop_back();
 	}
-
-    // create the window
-    sf::RenderWindow window(sf::VideoMode(mapWidth* cellHeightWidth, mapHeight* cellHeightWidth), "A* Pathfinding");
-	
-	// create screen buffer margin
-	float buffer_width = 50;
-	sf::RectangleShape screen_boundary(sf::Vector2f(mapWidth* cellHeightWidth - buffer_width, 
-													mapHeight* cellHeightWidth - buffer_width));
-	screen_boundary.setPosition(sf::Vector2f(buffer_width, buffer_width));
 
 	// create screen background
 	sf::Texture bgtexture;
-	if (!bgtexture.loadFromFile("Resources/output-0.png"))
+	if (!bgtexture.loadFromFile("Resources/output-2.png"))
 	{
 		cout << "File not found" << endl;
 	}
@@ -659,14 +740,17 @@ int main(int argc, char **argv)
 	std::vector<vec2> completed_path = A_Star(window, start, end);
 
 	//Give Path to Enemies
-	auto it = enemies.begin();
+	auto ite = enemies.begin();
+	auto itp = preppedEnemies.begin();
 	for (int e = 0; e < 1; e++)
 	{
 		for (vec2 v : completed_path)
 		{
-			it->get()->currentPath.insert(it->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+			ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+			itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
 		}
-		it++;
+		ite++;
+		itp++;
 	}
 
     // create the particle system
@@ -680,6 +764,32 @@ int main(int argc, char **argv)
     {
 		window.clear();
 
+		// update level
+		levelTracker.enemyTimer += clock.getElapsedTime().asMilliseconds();
+		if (levelTracker.enemyTimer > levelTracker.enemyRate) {
+			levelTracker.enemyTimer = 0;
+			if (!preppedEnemies.empty())
+			{
+				enemies.push_back(preppedEnemies.back());
+				preppedEnemies.pop_back();
+			}
+			else
+			{
+				if (enemies.empty()) {
+					levelTracker.completed = true;
+				}
+			}
+		}
+		if (levelTracker.completed) {
+			levelTracker.completed = false;
+
+			// ResetEnemies
+			for (size_t i = 0; i < levelTracker.enemyNumber; i++)
+			{
+				preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first, start.second), levelTracker.enemyHealth, levelTracker.enemySpeed));
+			}
+		}
+
         // handle events
         sf::Event event;
         while (window.pollEvent(event))
@@ -690,21 +800,24 @@ int main(int argc, char **argv)
 			// New Path
 			if (event.mouseButton.button == sf::Mouse::Button::Left && event.type == event.MouseButtonPressed)
 			{
-				end.first = sf::Mouse::getPosition(window).x / cellHeightWidth;
+				//DEBUG new path
+				/*end.first = sf::Mouse::getPosition(window).x / cellHeightWidth;
 				end.second = sf::Mouse::getPosition(window).y / cellHeightWidth;
 				completed_path = A_Star(window, start, end);
-				it = enemies.begin();
-				while(it != enemies.end())
+				ite = enemies.begin();
+				while(ite != enemies.end())
 				{
-					it->get()->UpdatePosition(sf::Vector2f(0, 0));
-					it->get()->currentPath.clear();
+					ite->get()->UpdatePosition(sf::Vector2f(0, 0));
+					ite->get()->currentPath.clear();
 
 					for (vec2 v : completed_path)
 					{
-						it->get()->currentPath.insert(it->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+						ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
 					}
-					it++;
-				}
+					ite++;
+				}*/
+				turrets.push_back(Turret(sf::Vector2f(sf::Mouse::getPosition(window).x,
+					sf::Mouse::getPosition(window).y)));
 			}
         }
 
@@ -738,16 +851,17 @@ int main(int argc, char **argv)
 			turrets[i].draw(window);
 		}
 
-		it = enemies.begin();
-		while (it != enemies.end())
-		{
-			it->get()->update();
-			//e.UpdatePosition(Math::clamp(e.position, screen_boundary.getSize(), screen_boundary.getPosition()));
-			it->get()->draw(window);
-			it++;
-		}
+		enemies.remove_if([](shared_ptr<Enemy> elem) { return elem->toDelete; });
 
-		enemies.remove_if([](shared_ptr<Enemy> elem) { if (elem->toDelete) return true; else return false; });
+		ite = enemies.begin();
+		while (ite != enemies.end())
+		{
+			//cout << ite->get() << "\t" << ite->get()->toDelete << endl;
+			ite->get()->update();
+			//e.UpdatePosition(Math::clamp(e.position, screen_boundary.getSize(), screen_boundary.getPosition()));
+			ite->get()->draw(window);
+			ite++;
+		}
 
         window.display();
     }
