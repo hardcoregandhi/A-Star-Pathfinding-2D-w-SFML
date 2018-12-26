@@ -18,7 +18,7 @@ typedef pair<int, int> vec2;
 #define M_PI 3.14159265358979323846   // pi
 const int mapHeight = 50;
 const int mapWidth = 50;
-const int cellHeightWidth = 10;
+const int cellHeightWidth = 20;
 const int cellHeightWidthHalf = cellHeightWidth/2;
 const int screenWidth = mapWidth * cellHeightWidth;
 const int screenHeight = mapHeight * cellHeightWidth;
@@ -30,8 +30,8 @@ class Level {
 	float	enemySpeedModifier = 1;
 public:
 	float	enemyNumber = 5;
-	float	enemySpeed = 0.5;
-	float	enemyHealth = 0.1;
+	float	enemySpeed = 0.1;
+	float	enemyHealth = 50;
 	float	enemyTimer = 0;
 	float	enemyRate = 1000;			// seconds between enemies
 	int		levelNumber = 1;			// incremental level number
@@ -48,6 +48,8 @@ public:
 
 class Enemy {
 public:
+	sf::Texture* texture = new sf::Texture();
+	sf::Sprite* sprite = new sf::Sprite();
 	float health;
 	bool toDelete = false;
 	const float mass = 1;
@@ -78,18 +80,33 @@ public:
 		baseRect.setOutlineThickness(1);
 		health = _health;
 		max_speed = _max_speed;
+
+		if (!texture->loadFromFile("Resources/output-49.png")) {
+			cout << "File not found" << endl;
+		}
+		texture->setSmooth(true);
+		sprite->setTexture(*texture);
+		sprite->setOrigin(sf::Vector2f(texture->getSize().x / 2,
+			texture->getSize().y / 2));
+		sprite->setPosition(position);
+		sprite->setScale(2, 2);
+		sprite->setRotation(rotation);
+		sprite->setScale(0.5, 0.5);
 	}
 
 	void draw(sf::RenderWindow& window) {
-		window.draw(baseRect);
+		//window.draw(baseRect);
+		window.draw(*sprite);
 	}
 
-	void rotateToFaceTarget(sf::Vector2<float> target) {
+	void RotateToFaceTarget(sf::Vector2<float> target) {
 		float dx = position.x - target.x;
 		float dy = position.y - target.y;
 
 		rotation = (atan2(dy, dx)) * 180 / M_PI;
 		baseRect.setRotation(rotation + rotationOffset);
+		sprite->setRotation(rotation - 90);
+
 	}
 
 	sf::Vector2f seek(sf::Vector2f from, sf::Vector2f to, float length) {
@@ -120,11 +137,13 @@ public:
 		steering = steering / mass;
 		velocity = Math::truncate(velocity + steering, max_speed);
 		UpdatePosition(position + velocity);
+		RotateToFaceTarget(position + velocity);
 	}
 
 	void UpdatePosition(sf::Vector2f p){
 		position = p;
 		baseRect.setPosition(position);
+		sprite->setPosition(position);
 	}
 	void Hit(const float dmg) {
 		health -= dmg;
@@ -288,7 +307,7 @@ public:
 		turretSprite->setTexture(*turretTexture);
 		turretSprite->setOrigin(sf::Vector2f(turretTexture->getSize().x / 2,
 											turretTexture->getSize().y / 2));
-		turretSprite->setPosition(position);
+		turretSprite->setPosition(position.x + cellHeightWidthHalf, position.y + cellHeightWidthHalf);
 		turretSprite->setScale(0.5, 0.5);
 	}
 
@@ -344,6 +363,10 @@ public:
 	}
 };
 
+std::vector<Turret>	turrets;
+std::list<shared_ptr<Enemy>> enemies;
+std::list<shared_ptr<Enemy>> preppedEnemies;
+
 std::vector<vec2> reconstruct_path(std::map<vec2, vec2> cameFrom,
 	vec2 current) {
 	std::vector<vec2> total_path;
@@ -358,6 +381,7 @@ std::vector<vec2> reconstruct_path(std::map<vec2, vec2> cameFrom,
 double heuristic_cost_estimate(vec2 from, vec2 to) {
 	return hypot(from.first - to.first, from.second - to.second);
 }
+std::vector<vec2> obstacles;
 
 std::vector<vec2> getNeighbours(vec2 pos) {
 	// replace when adding obstacles
@@ -385,7 +409,6 @@ std::vector<vec2> getNeighbours(vec2 pos) {
 		temp.push_back(vec2(pos.first + 1, pos.second - 1));
 
 	std::vector<vec2> toRemove;
-	std::vector<vec2> obstacles;
 	//ADD OBSTACLES HERE TODO:Implement true map editor
 	/*for (size_t i = 1; i < 100; i++)
 	{
@@ -400,12 +423,17 @@ std::vector<vec2> getNeighbours(vec2 pos) {
 	{
 		obstacles.push_back(vec2(i, 16));
 	}*/
-	for (vec2 pos : temp)
+	for (auto pos : temp)
+	{
+		//vec2 pos(t.position.x, t.position.y);
 		for (vec2 ob : obstacles)
+		{
 			if (pos == ob)
 			{
 				toRemove.push_back(pos);
 			}
+		}
+	}
 	for (vec2 tr : toRemove)
 	{
 		std::vector<vec2>::iterator findInTemp =
@@ -663,16 +691,13 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 	}
 	return std::vector<vec2>();
 }
-std::vector<Turret>	turrets;
-std::list<shared_ptr<Enemy>> enemies;
-std::list<shared_ptr<Enemy>> preppedEnemies;
 
 int main(int argc, char **argv)
 {
-	int map[mapHeight][mapWidth];
+	int map[screenHeight/cellHeightWidth][screenWidth/cellHeightWidth];
 
 	vec2 start = vec2(0, 0);
-	vec2 end = vec2(4, 4);
+	vec2 end = vec2(25, 25);
 
 	if (argc == 5) {
 		start.first  = atoi(argv[1]);
@@ -800,26 +825,79 @@ int main(int argc, char **argv)
 			// New Path
 			if (event.mouseButton.button == sf::Mouse::Button::Left && event.type == event.MouseButtonPressed)
 			{
-				//DEBUG new path
-				/*end.first = sf::Mouse::getPosition(window).x / cellHeightWidth;
-				end.second = sf::Mouse::getPosition(window).y / cellHeightWidth;
-				completed_path = A_Star(window, start, end);
-				ite = enemies.begin();
-				while(ite != enemies.end())
+				// new turret
+				int mouseCellX = sf::Mouse::getPosition(window).x / cellHeightWidth;
+				int mouseCellY = sf::Mouse::getPosition(window).y / cellHeightWidth;
+				sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
+				rect.setFillColor(sf::Color::White);
+				rect.setPosition(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth);
+				window.draw(rect);
+				Turret temp(sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth));
+				bool occupied = false;
+				for (size_t i = 0; i < turrets.size(); i++)
 				{
-					ite->get()->UpdatePosition(sf::Vector2f(0, 0));
-					ite->get()->currentPath.clear();
-
-					for (vec2 v : completed_path)
+					if (turrets[i].position == sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth))
 					{
-						ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+						occupied = true;
 					}
-					ite++;
-				}*/
-				turrets.push_back(Turret(sf::Vector2f(sf::Mouse::getPosition(window).x,
-					sf::Mouse::getPosition(window).y)));
+				}
+				if (!occupied)
+				{
+					turrets.push_back(temp);
+					map[mouseCellX][mouseCellY] = 1;
+					obstacles.push_back(vec2(mouseCellX, mouseCellY));
+					// New obstacle = new path needed
+					completed_path = A_Star(window, start, end);
+					ite = enemies.begin();
+					itp = preppedEnemies.begin();
+					while (ite != enemies.end())
+					{
+						ite->get()->currentPath.clear();
+
+						for (vec2 v : completed_path)
+						{
+							ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+						}
+
+						//need to find current nearest step in the path and remove eveything before it
+						float minDist = Math::length(sf::Vector2f(0, 0) - sf::Vector2f(screenHeight, screenWidth));
+						vec2 closestvec;
+						for (vec2 var : completed_path)
+						{
+							if (Math::length(sf::Vector2f(var.first, var.second) - ite->get()->position / (float)cellHeightWidth) < minDist)
+							{
+								closestvec = var;
+								minDist = Math::length(sf::Vector2f(var.first, var.second) - ite->get()->position / (float)cellHeightWidth);
+							}
+						}
+						sf::Vector2f closest(closestvec.first, closestvec.second);
+						auto currentPathClosestStep = find(ite->get()->currentPath.begin(), ite->get()->currentPath.end(), closest);
+						ite->get()->currentPath.erase(ite->get()->currentPath.begin(), currentPathClosestStep);
+						ite++;
+					}
+					while (itp != preppedEnemies.end())
+					{
+						itp->get()->currentPath.clear();
+						for (vec2 v : completed_path)
+						{
+							itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+						}
+						itp++;
+					}
+				}
+				else
+				{
+					cout << "Spot already taken" << endl;
+				}
+
 			}
         }
+		int mouseCellX = sf::Mouse::getPosition(window).x / cellHeightWidth;
+		int mouseCellY = sf::Mouse::getPosition(window).y / cellHeightWidth;
+		sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
+		rect.setFillColor(sf::Color::White);
+		rect.setPosition(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth);
+		window.draw(rect);
 
 		// make the particle system emitter follow the mouse
 		sf::Vector2f mouse = (sf::Vector2f)sf::Mouse::getPosition(window);
