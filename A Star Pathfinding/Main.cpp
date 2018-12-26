@@ -24,32 +24,37 @@ const int screenWidth = mapWidth * cellHeightWidth;
 const int screenHeight = mapHeight * cellHeightWidth;
 
 class Level {
-	float	enemyHealthModifier = 1;
-	float	enemyRateModifier = -1000;
+	float	enemyHealthModifier = 0.1;
+	float	enemyRateModifier = -100;
 	float	enemyNumberModifier = 5;
 	float	enemySpeedModifier = 1;
 public:
 	float	enemyNumber = 5;
 	float	enemySpeed = 0.1;
-	float	enemyHealth = 50;
+	float	enemyHealth = 100;
 	float	enemyTimer = 0;
-	float	enemyRate = 1000;			// seconds between enemies
+	float	enemyRate = 2000;			// seconds between enemies
 	int		levelNumber = 1;			// incremental level number
 	bool	completed = false;
 
 	void IncreaseLevel()
 	{
 		levelNumber++;
+		cout << levelNumber << endl;
 		enemyHealth += enemyHealthModifier;
 		enemyRate += enemyRateModifier;
 		enemyNumber += enemyNumberModifier;
+
+		cout << "enemyHealth:" << enemyHealth << endl;
+		cout << "enemyRate:" << enemyRate << endl;
+		cout << "enemyNumber:" << enemyNumber << endl;
 	}
 };
 
 class Enemy {
 public:
-	sf::Texture* texture = new sf::Texture();
-	sf::Sprite* sprite = new sf::Sprite();
+	sf::Texture* enemyTexture = new sf::Texture();
+	sf::Sprite* enemySprite = new sf::Sprite();
 	float health;
 	bool toDelete = false;
 	const float mass = 1;
@@ -81,22 +86,22 @@ public:
 		health = _health;
 		max_speed = _max_speed;
 
-		if (!texture->loadFromFile("Resources/output-49.png")) {
+		if (!enemyTexture->loadFromFile("Resources/output-49.png")) {
 			cout << "File not found" << endl;
 		}
-		texture->setSmooth(true);
-		sprite->setTexture(*texture);
-		sprite->setOrigin(sf::Vector2f(texture->getSize().x / 2,
-			texture->getSize().y / 2));
-		sprite->setPosition(position);
-		sprite->setScale(2, 2);
-		sprite->setRotation(rotation);
-		sprite->setScale(0.5, 0.5);
+		enemyTexture->setSmooth(true);
+		enemySprite->setTexture(*enemyTexture);
+		enemySprite->setOrigin(sf::Vector2f(enemyTexture->getSize().x / 2,
+			enemyTexture->getSize().y / 2));
+		enemySprite->setPosition(position);
+		enemySprite->setRotation(rotation);
+		enemySprite->setColor(sf::Color(255, 0, 0, 0));
+		enemySprite->setScale(5, 5);
 	}
 
 	void draw(sf::RenderWindow& window) {
-		//window.draw(baseRect);
-		window.draw(*sprite);
+		window.draw(baseRect);
+		window.draw(*enemySprite);
 	}
 
 	void RotateToFaceTarget(sf::Vector2<float> target) {
@@ -105,7 +110,7 @@ public:
 
 		rotation = (atan2(dy, dx)) * 180 / M_PI;
 		baseRect.setRotation(rotation + rotationOffset);
-		sprite->setRotation(rotation - 90);
+		enemySprite->setRotation(rotation - 90);
 
 	}
 
@@ -143,7 +148,7 @@ public:
 	void UpdatePosition(sf::Vector2f p){
 		position = p;
 		baseRect.setPosition(position);
-		sprite->setPosition(position);
+		enemySprite->setPosition(position);
 	}
 	void Hit(const float dmg) {
 		health -= dmg;
@@ -171,7 +176,7 @@ class Bullet {
 	float distanceTravelled = 0;
 	float distanceToTravel = 0;
 	int steps = 0;
-	const float damage = 0.1;
+	float damage = 0.1;
 
 public:
 	bool toDelete = false;
@@ -179,7 +184,7 @@ public:
 
 	Bullet() {}
 	~Bullet() {}
-	Bullet(sf::Vector2f pos, shared_ptr<Enemy> tar, float _distanceToTravel) {
+	Bullet(sf::Vector2f pos, shared_ptr<Enemy> tar, float _distanceToTravel, float dmg) {
 		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
 		position = pos;
 		target = tar;
@@ -201,6 +206,7 @@ public:
 		bulletSprite->setPosition(position);
 		bulletSprite->setScale(2, 2);
 		bulletSprite->setRotation(rotation);
+		damage = dmg;
 	}
 
 	sf::Vector2f seek(sf::Vector2f to) {
@@ -283,9 +289,10 @@ public:
 	list<shared_ptr<Bullet>> ammo;
 	shared_ptr<Enemy> target;
 	bool activeTarget;
+	float damage;
 	Turret() {}
 	~Turret() {}
-	Turret(sf::Vector2f pos) {
+	Turret(sf::Vector2f pos, float dmg) {
 		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
 		topRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf*3));
 		position = pos;
@@ -309,6 +316,7 @@ public:
 											turretTexture->getSize().y / 2));
 		turretSprite->setPosition(position.x + cellHeightWidthHalf, position.y + cellHeightWidthHalf);
 		turretSprite->setScale(0.5, 0.5);
+		damage = dmg;
 	}
 
 	void draw(sf::RenderWindow& window) {
@@ -345,7 +353,7 @@ public:
 			// SHOOT
 			if (activeTarget && isReady)
 			{
-				ammo.push_back(make_shared<Bullet>(position, target, Math::length(target->position - position)));
+				ammo.push_back(make_shared<Bullet>(position, target, Math::length(target->position - position),damage));
 				isReady = false;
 			}
 		}
@@ -725,7 +733,7 @@ int main(int argc, char **argv)
 	//		turrets.push_back(Turret(sf::Vector2f(x * cellHeightWidth + cellHeightWidthHalf, y * cellHeightWidth + cellHeightWidthHalf)));
 	//	}
 	//}
-	turrets.push_back(Turret(sf::Vector2f(50 * cellHeightWidth, 50 * cellHeightWidth)));
+	turrets.push_back(Turret(sf::Vector2f(50 * cellHeightWidth, 50 * cellHeightWidth), 0.1));
 
 
 	for (size_t i = 0; i < levelTracker.enemyNumber; i++)
@@ -807,6 +815,7 @@ int main(int argc, char **argv)
 		}
 		if (levelTracker.completed) {
 			levelTracker.completed = false;
+			levelTracker.IncreaseLevel();
 
 			// ResetEnemies
 			for (size_t i = 0; i < levelTracker.enemyNumber; i++)
@@ -832,12 +841,14 @@ int main(int argc, char **argv)
 				rect.setFillColor(sf::Color::White);
 				rect.setPosition(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth);
 				window.draw(rect);
-				Turret temp(sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth));
+				Turret temp(sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth), 0.5);
 				bool occupied = false;
 				for (size_t i = 0; i < turrets.size(); i++)
 				{
 					if (turrets[i].position == sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth))
 					{
+						cout << "upgraded dmg from " << turrets[i].damage << " to " << turrets[i].damage + 0.5 << endl;
+						turrets[i].damage += 0.5;
 						occupied = true;
 					}
 				}
@@ -861,16 +872,17 @@ int main(int argc, char **argv)
 
 						//need to find current nearest step in the path and remove eveything before it
 						float minDist = Math::length(sf::Vector2f(0, 0) - sf::Vector2f(screenHeight, screenWidth));
-						vec2 closestvec;
-						for (vec2 var : completed_path)
+						sf::Vector2f closestvec;
+						for (sf::Vector2f var : ite->get()->currentPath)
 						{
-							if (Math::length(sf::Vector2f(var.first, var.second) - ite->get()->position / (float)cellHeightWidth) < minDist)
+							//cout << var << "->" << ite->get()->position / (float)cellHeightWidth << "\t" << Math::length(var - ite->get()->position / (float)cellHeightWidth) << endl;
+							if (Math::length(var - ite->get()->position) < minDist)
 							{
 								closestvec = var;
-								minDist = Math::length(sf::Vector2f(var.first, var.second) - ite->get()->position / (float)cellHeightWidth);
+								minDist = Math::length(var - ite->get()->position);
 							}
 						}
-						sf::Vector2f closest(closestvec.first, closestvec.second);
+						sf::Vector2f closest = closestvec;
 						auto currentPathClosestStep = find(ite->get()->currentPath.begin(), ite->get()->currentPath.end(), closest);
 						ite->get()->currentPath.erase(ite->get()->currentPath.begin(), currentPathClosestStep);
 						ite++;
@@ -887,7 +899,7 @@ int main(int argc, char **argv)
 				}
 				else
 				{
-					cout << "Spot already taken" << endl;
+					//cout << "Spot already taken" << endl;
 				}
 
 			}

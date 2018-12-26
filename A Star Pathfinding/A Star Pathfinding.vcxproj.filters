@@ -29,5 +29,8 @@
     <Image Include="Resources\output-46.png">
       <Filter>Resources</Filter>
     </Image>
+    <Image Include="Resources\output-49.png">
+      <Filter>Resources</Filter>
+    </Image>
   </ItemGroup>
 </Project>
