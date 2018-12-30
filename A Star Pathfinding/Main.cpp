@@ -15,10 +15,15 @@ using namespace std;
 
 typedef pair<int, int> vec2;
 
+std::ostream & operator<< (std::ostream & out, const vec2 & v) {
+	out << "X:" << v.first << " Y:" << v.second;
+	return out;
+}
+
 #define M_PI 3.14159265358979323846   // pi
-const int mapHeight = 50;
-const int mapWidth = 50;
-const int cellHeightWidth = 20;
+const int mapHeight = 15;
+const int mapWidth = 15;
+const int cellHeightWidth = 50;
 const int cellHeightWidthHalf = cellHeightWidth/2;
 const int screenWidth = mapWidth * cellHeightWidth;
 const int screenHeight = mapHeight * cellHeightWidth;
@@ -30,12 +35,13 @@ class Level {
 	float	enemySpeedModifier = 1;
 public:
 	float	enemyNumber = 5;
-	float	enemySpeed = 0.1;
-	float	enemyHealth = 100;
+	float	enemySpeed = 1;
+	float	enemyHealth = 1;
 	float	enemyTimer = 0;
 	float	enemyRate = 2000;			// seconds between enemies
 	int		levelNumber = 1;			// incremental level number
 	bool	completed = false;
+	float	reward = 250;
 
 	void IncreaseLevel()
 	{
@@ -95,12 +101,12 @@ public:
 			enemyTexture->getSize().y / 2));
 		enemySprite->setPosition(position);
 		enemySprite->setRotation(rotation);
-		enemySprite->setColor(sf::Color(255, 0, 0, 0));
-		enemySprite->setScale(5, 5);
+		enemySprite->setScale(0.5, 0.5);
+		
 	}
 
 	void draw(sf::RenderWindow& window) {
-		window.draw(baseRect);
+		//window.draw(baseRect);
 		window.draw(*enemySprite);
 	}
 
@@ -127,7 +133,7 @@ public:
 		//path progression
 		if (currentPath.empty())
 			currentPath.push_back(sf::Vector2f(500, 500));
-		if (Math::length(currentPath[0] - position) < 0.25)
+		if (Math::length(currentPath[0] - position) < 0.50)
 		{
 			currentPath.erase(currentPath.begin());
 		}
@@ -271,9 +277,16 @@ public:
 6 	Orange 	61-65
 7 	Dark Orange 	66-100
 8 	Pearlescent 	101+
+
+white
+green
+blue
+yellow
+red
+
 */
 class Turret {
-	sf::Texture* turretTexture = new sf::Texture();
+	sf::Texture* turretTexture[5];
 	sf::Sprite* turretSprite = new sf::Sprite();
 
 	sf::RectangleShape baseRect;
@@ -283,7 +296,9 @@ class Turret {
 	double cooldownTimer = 0;
 	bool isReady = true;
 	const float rotationOffset = 90;
+	float rotationSpeed = 20;
 	list<Bullet> deadAmmo;
+	int level = 1;
 public:
 	sf::Vector2f position;
 	list<shared_ptr<Bullet>> ammo;
@@ -305,17 +320,19 @@ public:
 		baseRect.setOutlineThickness(1);
 		topRect.setFillColor(sf::Color::Cyan);
 		topRect.rotate(rotation);
-
-		if (!turretTexture->loadFromFile("Resources/output-51.png"))
+		
+		turretTexture[0] = new sf::Texture();
+		if (!turretTexture[0]->loadFromFile("Resources/output-51w.png"))
 		{
 			cout << "File not found" << endl;
 		}
-		turretTexture->setSmooth(true);
-		turretSprite->setTexture(*turretTexture);
-		turretSprite->setOrigin(sf::Vector2f(turretTexture->getSize().x / 2,
-											turretTexture->getSize().y / 2));
+		turretTexture[0]->setSmooth(true);
+		turretSprite->setTexture(*turretTexture[0]);
+		turretSprite->setOrigin(sf::Vector2f(turretTexture[0]->getSize().x / 2,
+											turretTexture[0]->getSize().y / 2));
 		turretSprite->setPosition(position.x + cellHeightWidthHalf, position.y + cellHeightWidthHalf);
 		turretSprite->setScale(0.5, 0.5);
+
 		damage = dmg;
 	}
 
@@ -335,8 +352,8 @@ public:
 		float dy = position.y - target.y;
 
 		rotation = (atan2(dy, dx)) * 180 / M_PI;
-		topRect.setRotation(rotation + rotationOffset);
-		turretSprite->setRotation(rotation - 90 );
+		//topRect.setRotation(rotation + rotationOffset);
+		turretSprite->setRotation(rotation - 90);
 	}
 
 	void update(double elapsedTime) {
@@ -368,6 +385,53 @@ public:
 			it++;
 		}
 		ammo.remove_if([](shared_ptr<Bullet> elem) { if (elem->toDelete) return true; else return false; });
+	}
+
+	void Upgrade()
+	{
+		switch (level)
+		{
+		case 1:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51w.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		case 2:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51g.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		case 3:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51b.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		case 4:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51y.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		case 5:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51r.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		default:
+			if (!turretTexture[0]->loadFromFile("Resources/output-51.png"))
+			{
+				cout << "File not found" << endl;
+			}
+			break;
+		}
+		cout << "upgraded dmg from " << damage << " to " << damage * 2 << endl;
+		level++;
+		damage *= 2;
+
 	}
 };
 
@@ -528,8 +592,10 @@ void display_route_in_progress(
 
 	sf::Font MyFont;
 	MyFont.loadFromFile("arial.ttf");
-	sf::Text text("Hello", MyFont, cellHeightWidth/4);
-	text.setColor(sf::Color::Black);
+	sf::Text textF("Hello", MyFont, cellHeightWidth / 4);
+	sf::Text textG("Hello", MyFont, cellHeightWidth / 4);
+	textF.setColor(sf::Color::Black);
+	textG.setColor(sf::Color::Black);
 	window.clear();
 	for (int y = mapHeight; y > -1; --y) {
 		for (int x = 0; x < mapWidth; ++x) {
@@ -567,12 +633,16 @@ void display_route_in_progress(
 				window.draw(rect);
 			}
 
-			std::map<vec2, double>::iterator findInGScore = fScore.find(vec2(x,y));
-			if (findInGScore != fScore.end()) {
-				text.setString(to_string(findInGScore->second));
+			std::map<vec2, double>::iterator findInFScore = fScore.find(vec2(x, y));
+			std::map<vec2, double>::iterator findInGScore = gScore.find(vec2(x, y));
+			if (findInFScore != fScore.end()) {
+				textF.setString(to_string(findInGScore->second));
+				textG.setString(to_string(findInGScore->second));
 			}
-			text.setPosition(tlx, tly);
-			window.draw(text);
+			textF.setPosition(tlx, tly);
+			textG.setPosition(tlx, tly + cellHeightWidth / 4);
+			window.draw(textF);
+			window.draw(textG);
 		}
 	}
 	window.display();
@@ -608,7 +678,7 @@ vec2 find_lowest_node_by_fScore(std::vector<vec2> openSet,
 	for (const std::pair<vec2, double> fff : fScore) {
 		for (vec2 v : openSet) {
 			if (v == fff.first) {
-				if (fff.second < lowest_score) {
+				if (fff.second <= lowest_score) {
 					lowest_score = fff.second;
 					lowest_node = fff.first;
 				}
@@ -645,20 +715,29 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 
 	// For the first node, that value is completely heuristic.
 	fScore[start] = heuristic_cost_estimate(start, goal);
+	int passes = 0;
 
 	while (!openSet.empty()) {
 		// std::system("clear");
 		// display_map(openSet, closedSet, goal);
+		cout << "Passes: " << passes++ << endl;
 
 		vec2 current = find_lowest_node_by_fScore(openSet, fScore);
 		if (current == goal) {
 			return reconstruct_path(cameFrom, current);
 		}
+		cout << "Current: " << current << endl;
+		cout << "OpenSet: " << endl;
+		for (auto i : openSet)
+			cout << "\t" << i << endl;
 		std::vector<vec2>::iterator findInOpenSet =
 			std::find(openSet.begin(), openSet.end(), current);
 
 		openSet.erase(findInOpenSet);
 		closedSet.push_back(current);
+		cout << "ClosedSet: " << endl;
+		for (auto i : closedSet)
+			cout << "\t" << i << endl;
 
 		std::vector<vec2> neighbours = getNeighbours(current);
 		for (vec2 neighbour : neighbours) {
@@ -673,11 +752,14 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 			// The distance from start to a neighbour
 			double tentative_gScore;
 			std::map<vec2, double>::iterator findInGScore = gScore.find(current);
-			if (findInGScore != gScore.end()) {
+			if (findInGScore != gScore.end()) 
+			{
 				tentative_gScore = heuristic_cost_estimate(start, neighbour);
 			}
 			else
-				tentative_gScore = heuristic_cost_estimate(current, neighbour);
+			{
+				tentative_gScore = gScore[current] + heuristic_cost_estimate(current, neighbour);
+			}
 
 			std::vector<vec2>::iterator findInOpenSet =
 				std::find(openSet.begin(), openSet.end(), neighbour);
@@ -702,10 +784,20 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 
 int main(int argc, char **argv)
 {
+	obstacles.push_back(vec2(2, 0));
+	obstacles.push_back(vec2(2, 1));
+	obstacles.push_back(vec2(2, 2));
+	obstacles.push_back(vec2(2, 3));
+	obstacles.push_back(vec2(2, 4));
+	obstacles.push_back(vec2(2, 5));
+	obstacles.push_back(vec2(2, 6));
+	obstacles.push_back(vec2(2, 7));
+	//obstacles.push_back(vec2(2, 8));
+
 	int map[screenHeight/cellHeightWidth][screenWidth/cellHeightWidth];
 
 	vec2 start = vec2(0, 0);
-	vec2 end = vec2(25, 25);
+	vec2 end = vec2(mapHeight-1, mapWidth-1);
 
 	if (argc == 5) {
 		start.first  = atoi(argv[1]);
@@ -724,7 +816,7 @@ int main(int argc, char **argv)
 	screen_boundary.setPosition(sf::Vector2f(buffer_width, buffer_width));
 
 	Level levelTracker;
-
+	float money = 1000;
 	//Debug Turrets
 	//for (int y = 0; y < mapHeight; y+=10)
 	//{
@@ -733,12 +825,12 @@ int main(int argc, char **argv)
 	//		turrets.push_back(Turret(sf::Vector2f(x * cellHeightWidth + cellHeightWidthHalf, y * cellHeightWidth + cellHeightWidthHalf)));
 	//	}
 	//}
-	turrets.push_back(Turret(sf::Vector2f(50 * cellHeightWidth, 50 * cellHeightWidth), 0.1));
+	//turrets.push_back(Turret(sf::Vector2f(50 * cellHeightWidth, 50 * cellHeightWidth), 0.1));
 
 
 	for (size_t i = 0; i < levelTracker.enemyNumber; i++)
 	{
-		preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first, start.second), levelTracker.enemyHealth, levelTracker.enemySpeed));
+		preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first + 20, start.second + 20), levelTracker.enemyHealth, levelTracker.enemySpeed));
 	}
 
 	for (int e = 0; e < 1; e++)
@@ -846,55 +938,63 @@ int main(int argc, char **argv)
 				for (size_t i = 0; i < turrets.size(); i++)
 				{
 					if (turrets[i].position == sf::Vector2f(mouseCellX * cellHeightWidth, mouseCellY * cellHeightWidth))
-					{
-						cout << "upgraded dmg from " << turrets[i].damage << " to " << turrets[i].damage + 0.5 << endl;
-						turrets[i].damage += 0.5;
+					{	
+						if (money >= 250)
+						{
+							money -= 250;
+							turrets[i].Upgrade();
+						}
 						occupied = true;
 					}
 				}
 				if (!occupied)
 				{
-					turrets.push_back(temp);
-					map[mouseCellX][mouseCellY] = 1;
-					obstacles.push_back(vec2(mouseCellX, mouseCellY));
-					// New obstacle = new path needed
-					completed_path = A_Star(window, start, end);
-					ite = enemies.begin();
-					itp = preppedEnemies.begin();
-					while (ite != enemies.end())
+					if (money >= 250)
 					{
-						ite->get()->currentPath.clear();
+						money -= 250;
 
-						for (vec2 v : completed_path)
+						turrets.push_back(temp);
+						map[mouseCellX][mouseCellY] = 1;
+						obstacles.push_back(vec2(mouseCellX, mouseCellY));
+						// New obstacle = new path needed
+						completed_path = A_Star(window, start, end);
+						ite = enemies.begin();
+						itp = preppedEnemies.begin();
+						while (ite != enemies.end())
 						{
-							ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
-						}
+							ite->get()->currentPath.clear();
 
-						//need to find current nearest step in the path and remove eveything before it
-						float minDist = Math::length(sf::Vector2f(0, 0) - sf::Vector2f(screenHeight, screenWidth));
-						sf::Vector2f closestvec;
-						for (sf::Vector2f var : ite->get()->currentPath)
-						{
-							//cout << var << "->" << ite->get()->position / (float)cellHeightWidth << "\t" << Math::length(var - ite->get()->position / (float)cellHeightWidth) << endl;
-							if (Math::length(var - ite->get()->position) < minDist)
+							for (vec2 v : completed_path)
 							{
-								closestvec = var;
-								minDist = Math::length(var - ite->get()->position);
+								ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
 							}
+
+							//need to find current nearest step in the path and remove eveything before it
+							float minDist = Math::length(sf::Vector2f(0, 0) - sf::Vector2f(screenHeight, screenWidth));
+							sf::Vector2f closestvec;
+							for (sf::Vector2f var : ite->get()->currentPath)
+							{
+								//cout << var << "->" << ite->get()->position / (float)cellHeightWidth << "\t" << Math::length(var - ite->get()->position / (float)cellHeightWidth) << endl;
+								if (Math::length(var - ite->get()->position) < minDist)
+								{
+									closestvec = var;
+									minDist = Math::length(var - ite->get()->position);
+								}
+							}
+							sf::Vector2f closest = closestvec;
+							auto currentPathClosestStep = find(ite->get()->currentPath.begin(), ite->get()->currentPath.end(), closest);
+							ite->get()->currentPath.erase(ite->get()->currentPath.begin(), currentPathClosestStep);
+							ite++;
 						}
-						sf::Vector2f closest = closestvec;
-						auto currentPathClosestStep = find(ite->get()->currentPath.begin(), ite->get()->currentPath.end(), closest);
-						ite->get()->currentPath.erase(ite->get()->currentPath.begin(), currentPathClosestStep);
-						ite++;
-					}
-					while (itp != preppedEnemies.end())
-					{
-						itp->get()->currentPath.clear();
-						for (vec2 v : completed_path)
+						while (itp != preppedEnemies.end())
 						{
-							itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+							itp->get()->currentPath.clear();
+							for (vec2 v : completed_path)
+							{
+								itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+							}
+							itp++;
 						}
-						itp++;
 					}
 				}
 				else
@@ -941,8 +1041,9 @@ int main(int argc, char **argv)
 			turrets[i].draw(window);
 		}
 
+		int prevSize = enemies.size();
 		enemies.remove_if([](shared_ptr<Enemy> elem) { return elem->toDelete; });
-
+		money += (prevSize - enemies.size()) * levelTracker.reward;
 		ite = enemies.begin();
 		while (ite != enemies.end())
 		{
@@ -952,6 +1053,16 @@ int main(int argc, char **argv)
 			ite->get()->draw(window);
 			ite++;
 		}
+
+		//display UI
+		sf::Font MyFont;
+		MyFont.loadFromFile("arial.ttf");
+		
+		sf::Text text("£"+to_string(money), MyFont, cellHeightWidth);
+		text.setColor(sf::Color::White);
+		text.setPosition(sf::Vector2f(10, screenWidth / 2));
+		window.draw(text);
+
 
         window.display();
     }

@@ -56,7 +56,13 @@ namespace Math{
 
 		return v1;
 	}
-
+	template <class T>
+	static T clamp(T v, T f) {
+		if (length(v) > f)
+			return normalize(v) * f;
+		else
+			return v;
+	}
 	template <class T>
 	bool contains(sf::RectangleShape r, sf::Vector2<T> v)
 	{
