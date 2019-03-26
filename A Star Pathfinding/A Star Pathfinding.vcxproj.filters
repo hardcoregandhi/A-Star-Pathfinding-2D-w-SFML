@@ -5,6 +5,8 @@
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="VectorMath.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Bullet.cpp" />
+    <ClCompile Include="Turret.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -37,5 +39,7 @@
   <ItemGroup>
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="Bullet.h" />
+    <ClInclude Include="Turret.h" />
   </ItemGroup>
 </Project>

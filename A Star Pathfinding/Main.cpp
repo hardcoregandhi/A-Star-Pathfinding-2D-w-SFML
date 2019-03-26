@@ -12,10 +12,9 @@
 #include <math.h>
 #include "Enemy.h"
 #include "Constants.h"
+#include "Turret.h"
 #pragma warning(disable: 4244)
 using namespace std;
-
-
 
 struct Level {
 	float	enemyHealthModifier = 0.1f;
@@ -43,274 +42,6 @@ public:
 		cout << "enemyHealth:" << enemyHealth << endl;
 		cout << "enemyRate:" << enemyRate << endl;
 		cout << "enemyNumber:" << enemyNumber << endl;
-	}
-};
-
-
-class Bullet {
-	sf::Texture* bulletTexture = new sf::Texture();
-	sf::Sprite* bulletSprite = new sf::Sprite();
-	
-	sf::RectangleShape baseRect;
-	shared_ptr<Enemy> target;
-	float rotation;
-	sf::Vector2f velocity;
-	const float rotationOffset = 90;
-	float max_speed = 10;
-	const float max_force = 20;
-	float distanceTravelled = 0;
-	float distanceToTravel = 0;
-	int steps = 0;
-	float damage = 0.1f;
-
-public:
-	bool toDelete = false;
-	sf::Vector2f position;
-
-	Bullet() {}
-	~Bullet() {}
-	Bullet(sf::Vector2f pos, shared_ptr<Enemy> tar, float _distanceToTravel, float dmg) {
-		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
-		position = pos;
-		target = tar;
-		distanceToTravel = _distanceToTravel;
-		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
-		baseRect.setPosition(pos.x, pos.y);
-		baseRect.setFillColor(sf::Color::White);
-		baseRect.setOutlineColor(sf::Color::White);
-		baseRect.setOutlineThickness(1);
-		baseRect.rotate(rotation);
-
-		if (!bulletTexture->loadFromFile("Resources/output-46.png")) {
-			cout << "File not found" << endl;
-		}
-		bulletTexture->setSmooth(true);
-		bulletSprite->setTexture(*bulletTexture);
-		bulletSprite->setOrigin(sf::Vector2f(bulletTexture->getSize().x / 2,
-			bulletTexture->getSize().y / 2));
-		bulletSprite->setPosition(position);
-		bulletSprite->setScale(2, 2);
-		bulletSprite->setRotation(rotation);
-		damage = dmg;
-	}
-
-	sf::Vector2f seek(sf::Vector2f to) {
-		return Math::normalize(to - position) * max_speed;
-	}
-
-	void print() {
-		cout << position << endl << velocity << endl;
-	}
-
-	void RotateToFaceTarget(sf::Vector2<float> target) {
-		float dx = position.x - target.x;
-		float dy = position.y - target.y;
-
-		rotation = (atan2(dy, dx)) * 180 / M_PI;
-		baseRect.setRotation(rotation + rotationOffset);
-		bulletSprite->setRotation(rotation - 90);
-	}
-
-	void update() {
-		sf::Vector2f desired_velocity;
-		sf::Vector2f steering;
-		//path progression
-		if (Math::length(target->position - position) < 0.2 ||
-			distanceTravelled > distanceToTravel)
-		{
-			toDelete = true;
-			target->Hit(damage);
-		}
-
-		//seek
-		desired_velocity = seek(target->position);
-		steering = desired_velocity - velocity;
-
-		//combine forces
-		steering = Math::truncate(steering, max_force);
-		velocity = Math::truncate(velocity + steering, max_speed);
-		UpdatePosition(position + velocity);
-		RotateToFaceTarget(position + velocity);
-	}
-
-	void draw(sf::RenderWindow& window) {
-		//window.draw(baseRect);
-		window.draw(*bulletSprite);
-	}
-
-	void UpdatePosition(sf::Vector2f p) {
-		distanceTravelled += Math::length(p - position);
-		steps++;
-		position = p;
-		baseRect.setPosition(position);
-		bulletSprite->setPosition(position);
-	}
-};
-
-/*
-1 	White 	0-4
-2 	Green 	5-10
-3 	Blue 	11-15
-4 	Purple 	16-49
-5 	Yellow 	50-60
-6 	Orange 	61-65
-7 	Dark Orange 	66-100
-8 	Pearlescent 	101+
-
-white
-green
-blue
-yellow
-red
-
-*/
-class Turret {
-	sf::Texture* turretTexture[5];
-	sf::Sprite* turretSprite = new sf::Sprite();
-
-	sf::RectangleShape baseRect;
-	sf::RectangleShape topRect;
-	float rotation;
-	double cooldownTime = 1000;
-	double cooldownTimer = 0;
-	bool isReady = true;
-	const float rotationOffset = 90;
-	float rotationSpeed = 20;
-	list<Bullet> deadAmmo;
-	int level = 1;
-public:
-	sf::Vector2f position;
-	list<shared_ptr<Bullet>> ammo;
-	shared_ptr<Enemy> target;
-	bool activeTarget;
-	float damage;
-	Turret() {}
-	~Turret() {}
-	Turret(sf::Vector2f pos, float dmg) {
-		baseRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf));
-		topRect = sf::RectangleShape(sf::Vector2f(cellHeightWidthHalf, cellHeightWidthHalf*3));
-		position = pos;
-		topRect.setOrigin(sf::Vector2f(topRect.getSize().x / 2, topRect.getSize().y / 2));
-		baseRect.setOrigin(sf::Vector2f(baseRect.getSize().x / 2, baseRect.getSize().y / 2));
-		baseRect.setPosition(pos.x, pos.y);
-		topRect.setPosition(pos.x, pos.y);
-		baseRect.setFillColor(sf::Color::Blue);
-		baseRect.setOutlineColor(sf::Color::Blue);
-		baseRect.setOutlineThickness(1);
-		topRect.setFillColor(sf::Color::Cyan);
-		topRect.rotate(rotation);
-		
-		turretTexture[0] = new sf::Texture();
-		if (!turretTexture[0]->loadFromFile("Resources/output-51w.png"))
-		{
-			cout << "File not found" << endl;
-		}
-		turretTexture[0]->setSmooth(true);
-		turretSprite->setTexture(*turretTexture[0]);
-		turretSprite->setOrigin(sf::Vector2f(turretTexture[0]->getSize().x / 2,
-											turretTexture[0]->getSize().y / 2));
-		turretSprite->setPosition(position.x + cellHeightWidthHalf, position.y + cellHeightWidthHalf);
-		turretSprite->setScale(0.5, 0.5);
-
-		damage = dmg;
-	}
-
-	void draw(sf::RenderWindow& window) {
-		//window.draw(baseRect);
-		//window.draw(topRect);
-		window.draw(*turretSprite);
-		for each (auto b in ammo)
-		{
-			b->draw(window);
-		}
-
-	}
-
-	void rotateToFaceTarget(sf::Vector2<float> target) {
-		float dx = position.x - target.x;
-		float dy = position.y - target.y;
-
-		rotation = (atan2(dy, dx)) * 180 / M_PI;
-		//topRect.setRotation(rotation + rotationOffset);
-		turretSprite->setRotation(rotation - 90);
-	}
-
-	void update(double elapsedTime) {
-		if (!isReady) {
-			cooldownTimer += elapsedTime;
-			if (cooldownTimer > cooldownTime)
-			{
-				isReady = true;
-				cooldownTimer = 0;
-			}
-		}
-		else
-		{
-			// SHOOT
-			if (activeTarget && isReady)
-			{
-				ammo.push_back(make_shared<Bullet>(position, target, Math::length(target->position - position),damage));
-				isReady = false;
-			}
-		}
-		std::list<shared_ptr<Bullet>>::iterator it = ammo.begin();
-		while (it != ammo.end())
-		{
-			if (it->get()->toDelete)
-			{
-				ammo.erase(it);
-			}
-			it->get()->update();
-			it++;
-		}
-		ammo.remove_if([](shared_ptr<Bullet> elem) { if (elem->toDelete) return true; else return false; });
-	}
-
-	void Upgrade()
-	{
-		switch (level)
-		{
-		case 1:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51w.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		case 2:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51g.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		case 3:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51b.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		case 4:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51y.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		case 5:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51r.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		default:
-			if (!turretTexture[0]->loadFromFile("Resources/output-51.png"))
-			{
-				cout << "File not found" << endl;
-			}
-			break;
-		}
-		cout << "upgraded dmg from " << damage << " to " << damage * 2 << endl;
-		level++;
-		damage *= 2;
-
 	}
 };
 
@@ -573,6 +304,25 @@ shared_ptr<sf::Vector2f> find_lowest_node_by_fScore(std::vector<shared_ptr<sf::V
 	return lowest_node;
 }
 
+auto VectorSharedPtrFinder(std::vector<shared_ptr<sf::Vector2f>> _vector, shared_ptr<sf::Vector2f> target)
+{
+	for each (auto var in _vector)
+	{
+		if (var->x == target->x && var->y == target->y)
+			return true;
+	}
+	return false;
+}
+auto ListSharedPtrFinder(std::list<shared_ptr<sf::Vector2f>> _list, shared_ptr<sf::Vector2f> target)
+{
+	for each (auto var in _list)
+	{
+		if (var->x == target->x && var->y == target->y)
+			return true;
+	}
+	return false;
+}
+
 
 std::vector<shared_ptr<sf::Vector2f>> A_Star(sf::RenderWindow& window, shared_ptr<sf::Vector2f> start, shared_ptr<sf::Vector2f> goal) {
 	// The set of nodes already evaluated
@@ -628,10 +378,7 @@ std::vector<shared_ptr<sf::Vector2f>> A_Star(sf::RenderWindow& window, shared_pt
 		std::vector<shared_ptr<sf::Vector2f>> neighbours = getNeighbours(current);
 		for (auto neighbour : neighbours) {
 
-			std::list<shared_ptr<sf::Vector2f>>::iterator findInClosedSet =
-				std::find(closedSet.begin(), closedSet.end(), neighbour);
-
-			if (findInClosedSet != closedSet.end()) {
+			if (ListSharedPtrFinder(closedSet, neighbour)) {
 				continue; // Ignore the neighbour which is already evaluated.
 			}
 
@@ -647,9 +394,7 @@ std::vector<shared_ptr<sf::Vector2f>> A_Star(sf::RenderWindow& window, shared_pt
 				tentative_gScore = gScore[current] + heuristic_cost_estimate(current, neighbour);
 			}
 
-			std::vector<shared_ptr<sf::Vector2f>>::iterator findInOpenSet =
-				std::find(openSet.begin(), openSet.end(), neighbour);
-			if (findInOpenSet == openSet.end()) {
+			if (VectorSharedPtrFinder(openSet, neighbour)) {
 				openSet.push_back(neighbour);
 			}
 			else if (tentative_gScore >= gScore[neighbour]) {

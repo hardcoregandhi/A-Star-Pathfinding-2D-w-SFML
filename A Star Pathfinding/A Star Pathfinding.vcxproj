@@ -68,9 +68,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="Turret.cpp" />
     <ClCompile Include="VectorMath.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -85,8 +87,10 @@
     <Image Include="Resources\output-51.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bullet.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Turret.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
