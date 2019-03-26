@@ -13,51 +13,51 @@ namespace UnitTest1
 		TEST_METHOD(TestMethod1)
 		{
 			// TODO: Your test code here
-			Assert::AreEqual(hypot(5,5), heuristic_cost_estimate(vec2(0, 0), vec2(5, 5)));
-			Assert::AreEqual(hypot(4,4), heuristic_cost_estimate(vec2(1, 1), vec2(5, 5)));
-			Assert::AreEqual(hypot(3,3), heuristic_cost_estimate(vec2(2, 2), vec2(5, 5)));
-			Assert::AreEqual(hypot(2,2), heuristic_cost_estimate(vec2(3, 3), vec2(5, 5)));
+			Assert::AreEqual(hypot(5,5), heuristic_cost_estimate(make_shared<sf::Vector2f>(0, 0), make_shared<sf::Vector2f>(5, 5)));
+			Assert::AreEqual(hypot(4,4), heuristic_cost_estimate(make_shared<sf::Vector2f>(1, 1), make_shared<sf::Vector2f>(5, 5)));
+			Assert::AreEqual(hypot(3,3), heuristic_cost_estimate(make_shared<sf::Vector2f>(2, 2), make_shared<sf::Vector2f>(5, 5)));
+			Assert::AreEqual(hypot(2,2), heuristic_cost_estimate(make_shared<sf::Vector2f>(3, 3), make_shared<sf::Vector2f>(5, 5)));
 
 		}
 		TEST_METHOD(PathTest1)
 		{
 			{
-				obstacles.push_back(vec2(0, 2));
-				obstacles.push_back(vec2(1, 2));
-				obstacles.push_back(vec2(2, 2));
-				obstacles.push_back(vec2(3, 2));
-				obstacles.push_back(vec2(4, 2));
-				obstacles.push_back(vec2(5, 2));
-				obstacles.push_back(vec2(6, 2));
-				obstacles.push_back(vec2(7, 2));
-				//obstacles.push_back(vec2(8, 2));
+				obstacles.push_back(sf::Vector2f(0, 2));
+				obstacles.push_back(sf::Vector2f(1, 2));
+				obstacles.push_back(sf::Vector2f(2, 2));
+				obstacles.push_back(sf::Vector2f(3, 2));
+				obstacles.push_back(sf::Vector2f(4, 2));
+				obstacles.push_back(sf::Vector2f(5, 2));
+				obstacles.push_back(sf::Vector2f(6, 2));
+				obstacles.push_back(sf::Vector2f(7, 2));
+				//obstacles.push_back(sf::Vector2f(8, 2));
 
-				vec2 start = vec2(0, 0);
-				vec2 end = vec2(mapHeight - 1, mapWidth - 1);
+				shared_ptr<sf::Vector2f> start = make_shared<sf::Vector2f>(0, 0);
+				shared_ptr<sf::Vector2f> end = make_shared<sf::Vector2f>(mapHeight - 1, mapWidth - 1);
 				sf::RenderWindow window(sf::VideoMode(mapWidth* cellHeightWidth, mapHeight* cellHeightWidth), "A* Pathfinding");
 
-				std::vector<vec2> completed_path = A_Star(window, start, end);
+				auto completed_path = A_Star(window, start, end);
 				Assert::IsFalse(completed_path.empty());
 			}
 		}
 		TEST_METHOD(PathTest2)
 		{
 			{
-				obstacles.push_back(vec2(2, 0));
-				obstacles.push_back(vec2(2, 1));
-				obstacles.push_back(vec2(2, 2));
-				obstacles.push_back(vec2(2, 3));
-				obstacles.push_back(vec2(2, 4));
-				obstacles.push_back(vec2(2, 5));
-				//obstacles.push_back(vec2(2, 6));
-				//obstacles.push_back(vec2(2, 7));
-				//obstacles.push_back(vec2(2, 8));
+				obstacles.push_back(sf::Vector2f(2, 0));
+				obstacles.push_back(sf::Vector2f(2, 1));
+				obstacles.push_back(sf::Vector2f(2, 2));
+				obstacles.push_back(sf::Vector2f(2, 3));
+				obstacles.push_back(sf::Vector2f(2, 4));
+				obstacles.push_back(sf::Vector2f(2, 5));
+				//obstacles.push_back(sf::Vector2f(2, 6));
+				//obstacles.push_back(sf::Vector2f(2, 7));
+				//obstacles.push_back(sf::Vector2f(2, 8));
 
-				vec2 start = vec2(0, 0);
-				vec2 end = vec2(mapHeight - 1, mapWidth - 1);
+				shared_ptr<sf::Vector2f> start = make_shared<sf::Vector2f>(0, 0);
+				shared_ptr<sf::Vector2f> end = make_shared<sf::Vector2f>(mapHeight - 1, mapWidth - 1);
 				sf::RenderWindow window(sf::VideoMode(mapWidth* cellHeightWidth, mapHeight* cellHeightWidth), "A* Pathfinding");
 
-				std::vector<vec2> completed_path = A_Star(window, start, end);
+				auto completed_path = A_Star(window, start, end);
 				Assert::IsFalse(completed_path.empty());
 			}
 		}

@@ -10,17 +10,10 @@
 #include <map>
 #include <vector>
 #include <math.h>
-
+#pragma warning(disable: 4244)
 using namespace std;
 
-typedef pair<int, int> vec2;
-
-std::ostream & operator<< (std::ostream & out, const vec2 & v) {
-	out << "X:" << v.first << " Y:" << v.second;
-	return out;
-}
-
-#define M_PI 3.14159265358979323846   // pi
+const float M_PI = 3.14159265358979323846f;   // pi
 const int mapHeight = 15;
 const int mapWidth = 15;
 const int cellHeightWidth = 50;
@@ -29,7 +22,7 @@ const int screenWidth = mapWidth * cellHeightWidth;
 const int screenHeight = mapHeight * cellHeightWidth;
 
 class Level {
-	float	enemyHealthModifier = 0.1;
+	float	enemyHealthModifier = 0.1f;
 	float	enemyRateModifier = -100;
 	float	enemyNumberModifier = 5;
 	float	enemySpeedModifier = 1;
@@ -65,11 +58,11 @@ public:
 	bool toDelete = false;
 	const float mass = 1;
 	const float max_force = 10;
-	float max_speed = 0.5;
+	float max_speed = 0.5f;
 	float heading; //angle
 	float boundingRadius = cellHeightWidth / 2;
 	sf::Vector2f center;
-	sf::Vector2f velocity = sf::Vector2f(0.1,0);
+	sf::Vector2f velocity = sf::Vector2f(0.1f,0);
 	sf::Vector2f forward = sf::Vector2f(1, 0);
 	sf::Vector2f side;
 	sf::Vector2f up = sf::Vector2f(0,1);
@@ -114,7 +107,7 @@ public:
 		float dx = position.x - target.x;
 		float dy = position.y - target.y;
 
-		rotation = (atan2(dy, dx)) * 180 / M_PI;
+		rotation = (atan2(dy, dx)) * 180.0f / M_PI;
 		baseRect.setRotation(rotation + rotationOffset);
 		enemySprite->setRotation(rotation - 90);
 
@@ -182,7 +175,7 @@ class Bullet {
 	float distanceTravelled = 0;
 	float distanceToTravel = 0;
 	int steps = 0;
-	float damage = 0.1;
+	float damage = 0.1f;
 
 public:
 	bool toDelete = false;
@@ -439,9 +432,9 @@ std::vector<Turret>	turrets;
 std::list<shared_ptr<Enemy>> enemies;
 std::list<shared_ptr<Enemy>> preppedEnemies;
 
-std::vector<vec2> reconstruct_path(std::map<vec2, vec2> cameFrom,
-	vec2 current) {
-	std::vector<vec2> total_path;
+std::vector<shared_ptr<sf::Vector2f>> reconstruct_path(std::map<shared_ptr<sf::Vector2f>, shared_ptr<sf::Vector2f>> cameFrom,
+	shared_ptr<sf::Vector2f> current) {
+	std::vector<shared_ptr<sf::Vector2f>> total_path;
 	total_path.push_back(current);
 	while (cameFrom.find(current) != cameFrom.end()) {
 		current = cameFrom[current];
@@ -450,55 +443,55 @@ std::vector<vec2> reconstruct_path(std::map<vec2, vec2> cameFrom,
 	return total_path;
 }
 
-double heuristic_cost_estimate(vec2 from, vec2 to) {
-	return hypot(from.first - to.first, from.second - to.second);
+double heuristic_cost_estimate(shared_ptr<sf::Vector2f> from, shared_ptr<sf::Vector2f> to) {
+	return hypot(from->x - to->x, from->y - to->y);
 }
-std::vector<vec2> obstacles;
+std::vector<sf::Vector2f> obstacles;
 
-std::vector<vec2> getNeighbours(vec2 pos) {
+std::vector<shared_ptr<sf::Vector2f>> getNeighbours(shared_ptr<sf::Vector2f> pos) {
 	// replace when adding obstacles
-	std::vector<vec2> temp;
-	if (pos.first != 0)
-		temp.push_back(vec2(pos.first - 1, pos.second));
-	if (pos.first != mapWidth - 1)
-		temp.push_back(vec2(pos.first + 1, pos.second));
-	if (pos.second != 0)
-		temp.push_back(vec2(pos.first, pos.second - 1));
-	if (pos.second != mapHeight - 1)
-		temp.push_back(vec2(pos.first, pos.second + 1));
+	std::vector<sf::Vector2f> temp;
+	if (pos->x != 0)
+		temp.push_back(sf::Vector2f(pos->x - 1, pos->y));
+	if (pos->x != mapWidth - 1)
+		temp.push_back(sf::Vector2f(pos->x + 1, pos->y));
+	if (pos->y != 0)
+		temp.push_back(sf::Vector2f(pos->x, pos->y - 1));
+	if (pos->y != mapHeight - 1)
+		temp.push_back(sf::Vector2f(pos->x, pos->y + 1));
 
 	// topleft
-	if (pos.first != 0 && pos.second != 0)
-		temp.push_back(vec2(pos.first - 1, pos.second - 1));
+	if (pos->x != 0 && pos->y != 0)
+		temp.push_back(sf::Vector2f(pos->x - 1, pos->y - 1));
 	// bottomleft
-	if (pos.first != 0 && pos.second != mapHeight)
-		temp.push_back(vec2(pos.first - 1, pos.second + 1));
+	if (pos->x != 0 && pos->y != mapHeight)
+		temp.push_back(sf::Vector2f(pos->x - 1, pos->y + 1));
 	// bottomright
-	if (pos.first != mapWidth && pos.second != mapHeight)
-		temp.push_back(vec2(pos.first + 1, pos.second + 1));
+	if (pos->x != mapWidth && pos->y != mapHeight)
+		temp.push_back(sf::Vector2f(pos->x + 1, pos->y + 1));
 	// topright
-	if (pos.first != mapWidth && pos.second != 0)
-		temp.push_back(vec2(pos.first + 1, pos.second - 1));
+	if (pos->x != mapWidth && pos->y != 0)
+		temp.push_back(sf::Vector2f(pos->x + 1, pos->y - 1));
 
-	std::vector<vec2> toRemove;
+	std::vector<sf::Vector2f> toRemove;
 	//ADD OBSTACLES HERE TODO:Implement true map editor
 	/*for (size_t i = 1; i < 100; i++)
 	{
-		obstacles.push_back(vec2(i, 10));
+		obstacles.push_back(sf::Vector2f(i, 10));
 	}
 
 	for (size_t i = 0; i < 25; i++)
 	{
-		obstacles.push_back(vec2(i, 13));
+		obstacles.push_back(sf::Vector2f(i, 13));
 	}
 	for (size_t i = 1; i < 100; i++)
 	{
-		obstacles.push_back(vec2(i, 16));
+		obstacles.push_back(sf::Vector2f(i, 16));
 	}*/
 	for (auto pos : temp)
 	{
-		//vec2 pos(t.position.x, t.position.y);
-		for (vec2 ob : obstacles)
+		//sf::Vector2f pos(t.position.x, t.position.y);
+		for (sf::Vector2f ob : obstacles)
 		{
 			if (pos == ob)
 			{
@@ -506,25 +499,29 @@ std::vector<vec2> getNeighbours(vec2 pos) {
 			}
 		}
 	}
-	for (vec2 tr : toRemove)
+	for (sf::Vector2f tr : toRemove)
 	{
-		std::vector<vec2>::iterator findInTemp =
+		std::vector<sf::Vector2f>::iterator findInTemp =
 			std::find(temp.begin(), temp.end(), tr);
 		temp.erase(findInTemp);
 	}
-
-	return temp;
+	vector<shared_ptr<sf::Vector2f>> toReturn;
+	for (auto a : temp)
+	{
+		toReturn.push_back(make_shared<sf::Vector2f>(a));
+	}
+	return toReturn;
 }
 
-int dist_between(vec2 current, vec2 neighbour) {
+int dist_between(shared_ptr<sf::Vector2f> current, shared_ptr<sf::Vector2f> neighbour) {
 	return 1; // Replace when adding obstacles
 }
 
-int find_closest_to_goal(std::vector<vec2> set, vec2 goal) {
+int find_closest_to_goal(std::vector<shared_ptr<sf::Vector2f>> set, shared_ptr<sf::Vector2f> goal) {
 	int current_lowest_index = 0;
-	int current_lowest_score = heuristic_cost_estimate(set[0], goal);
-	int score;
-	for (int i = 1; i < set.size(); ++i) {
+	float current_lowest_score = heuristic_cost_estimate(set[0], goal);
+	float score;
+	for (int i = 1; i < (int)set.size(); ++i) {
 		score = heuristic_cost_estimate(set[i], goal);
 		if (score < current_lowest_score) {
 			current_lowest_index = i;
@@ -535,7 +532,7 @@ int find_closest_to_goal(std::vector<vec2> set, vec2 goal) {
 	return current_lowest_index;
 }
 
-void display_route2D(sf::RenderWindow& window, std::vector<vec2> path, vec2 goal, sf::Vector2i mouse) {
+void display_route2D(sf::RenderWindow& window, std::vector<sf::Vector2f> path, sf::Vector2f goal, sf::Vector2i mouse) {
 
 	int mouseCellX = mouse.x / cellHeightWidth;
 	int mouseCellY = mouse.y / cellHeightWidth;
@@ -548,14 +545,14 @@ void display_route2D(sf::RenderWindow& window, std::vector<vec2> path, vec2 goal
 			//GRID
 			/*sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
 
-			std::vector<vec2>::iterator findInPath =
-				std::find(path.begin(), path.end(), vec2(x, y));
+			std::vector<sf::Vector2f>::iterator findInPath =
+				std::find(path.begin(), path.end(), sf::Vector2f(x, y));
 			if (findInPath != path.end()) {
 				rect.setFillColor(sf::Color::Red);
 				rect.setPosition(tlx, tly);
 				window.draw(rect);
 			}
-			else if (vec2(x, y) == goal) {
+			else if (sf::Vector2f(x, y) == goal) {
 				rect.setFillColor(sf::Color::Yellow);
 				rect.setPosition(tlx, tly);
 				window.draw(rect);
@@ -583,12 +580,12 @@ void display_route2D(sf::RenderWindow& window, std::vector<vec2> path, vec2 goal
 
 void display_route_in_progress(
 	sf::RenderWindow& window, 
-	std::list<vec2> closedSet, 
-	std::vector<vec2> openSet,
-	std::map<vec2, double> gScore,
-	std::map<vec2, double> fScore,
-	vec2 current, 
-	vec2 goal) {
+	std::list<shared_ptr<sf::Vector2f>> closedSet,
+	std::vector<shared_ptr<sf::Vector2f>> openSet,
+	std::map<shared_ptr<sf::Vector2f>, double> gScore,
+	std::map<shared_ptr<sf::Vector2f>, double> fScore,
+	shared_ptr<sf::Vector2f> current,
+	shared_ptr<sf::Vector2f> goal) {
 
 	sf::Font MyFont;
 	MyFont.loadFromFile("arial.ttf");
@@ -605,23 +602,23 @@ void display_route_in_progress(
 			//CELLS
 			sf::RectangleShape rect({ (float)cellHeightWidth, (float)cellHeightWidth });
 
-			std::vector<vec2>::iterator findInOpenSet =
-				std::find(openSet.begin(), openSet.end(), vec2(x,y));
-			std::list<vec2>::iterator findInClosedSet =
-				std::find(closedSet.begin(), closedSet.end(), vec2(x,y));
+			std::vector<shared_ptr<sf::Vector2f>>::iterator findInOpenSet =
+				std::find(openSet.begin(), openSet.end(), make_shared<sf::Vector2f>(x,y));
+			std::list<shared_ptr<sf::Vector2f>>::iterator findInClosedSet =
+				std::find(closedSet.begin(), closedSet.end(), make_shared<sf::Vector2f>(x,y));
 
 			if (findInOpenSet != openSet.end()) {
 				rect.setFillColor(sf::Color::Blue);
 				rect.setPosition(tlx, tly);
 				window.draw(rect);
 			}
-			else if (vec2(x, y) == goal) 
+			else if (sf::Vector2f(x, y) == *goal) 
 			{
 				rect.setFillColor(sf::Color::Green);
 				rect.setPosition(tlx, tly);
 				window.draw(rect);
 			}
-			else if (vec2(x, y) == current)
+			else if (sf::Vector2f(x, y) == *current)
 			{
 				rect.setFillColor(sf::Color::Yellow);
 				rect.setPosition(tlx, tly);
@@ -633,8 +630,8 @@ void display_route_in_progress(
 				window.draw(rect);
 			}
 
-			std::map<vec2, double>::iterator findInFScore = fScore.find(vec2(x, y));
-			std::map<vec2, double>::iterator findInGScore = gScore.find(vec2(x, y));
+			std::map<shared_ptr<sf::Vector2f>, double>::iterator findInFScore = fScore.find(make_shared<sf::Vector2f>(x, y));
+			std::map<shared_ptr<sf::Vector2f>, double>::iterator findInGScore = gScore.find(make_shared<sf::Vector2f>(x, y));
 			if (findInFScore != fScore.end()) {
 				textF.setString(to_string(findInGScore->second));
 				textG.setString(to_string(findInGScore->second));
@@ -670,13 +667,15 @@ void draw_gridlines(sf::RenderWindow& window)
 	}
 }
 
-vec2 find_lowest_node_by_fScore(std::vector<vec2> openSet,
-	std::map<vec2, double> fScore) {
-	double lowest_score = heuristic_cost_estimate(vec2(0,0), vec2(mapWidth,mapHeight));
-	vec2 lowest_node;
+shared_ptr<sf::Vector2f> find_lowest_node_by_fScore(std::vector<shared_ptr<sf::Vector2f>> openSet,
+	std::map<shared_ptr<sf::Vector2f>, double> fScore) {
+	auto from = make_shared<sf::Vector2f>((float)0, (float)0);
+	auto to = make_shared<sf::Vector2f>((float)mapWidth, (float)mapHeight);
+	double lowest_score = heuristic_cost_estimate(from, to);
+	shared_ptr<sf::Vector2f> lowest_node;
 
-	for (const std::pair<vec2, double> fff : fScore) {
-		for (vec2 v : openSet) {
+	for (auto fff : fScore) {
+		for (auto v : openSet) {
 			if (v == fff.first) {
 				if (fff.second <= lowest_score) {
 					lowest_score = fff.second;
@@ -688,29 +687,30 @@ vec2 find_lowest_node_by_fScore(std::vector<vec2> openSet,
 	return lowest_node;
 }
 
-std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
+
+std::vector<shared_ptr<sf::Vector2f>> A_Star(sf::RenderWindow& window, shared_ptr<sf::Vector2f> start, shared_ptr<sf::Vector2f> goal) {
 	// The set of nodes already evaluated
-	std::list<vec2> closedSet;
+	std::list<shared_ptr<sf::Vector2f>> closedSet;
 
 	// The set of currently discovered nodes that are not evaluated yet.
 	// Initially, only the start node is known.
-	std::vector<vec2> openSet;
+	std::vector<shared_ptr<sf::Vector2f>> openSet;
 	openSet.push_back(start);
 
 	// For each node, which node it can most efficiently be reached from.
 	// If a node can be reached from many nodes, cameFrom will eventually contain
 	// the most efficient previous step.
-	std::map<vec2, vec2> cameFrom; // := an empty map
+	std::map<shared_ptr<sf::Vector2f>, shared_ptr<sf::Vector2f>> cameFrom; // := an empty map
 
 	// For each node, the cost of getting from the start node to that node.
-	std::map<vec2, double> gScore; // := map with default value of Infinity
+	std::map<shared_ptr<sf::Vector2f>, double> gScore; // := map with default value of Infinity
 
 	// The cost of going from start to start is zero.
 	gScore[start] = 0;
 
 	// For each node, the total cost of getting from the start node to the goal
 	// by passing by that node. That value is partly known, partly heuristic.
-	std::map<vec2, double> fScore;
+	std::map<shared_ptr<sf::Vector2f>, double> fScore;
 	// fScore := map with default value of Infinity
 
 	// For the first node, that value is completely heuristic.
@@ -720,29 +720,29 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 	while (!openSet.empty()) {
 		// std::system("clear");
 		// display_map(openSet, closedSet, goal);
-		cout << "Passes: " << passes++ << endl;
+		//cout << "Passes: " << passes++ << endl;
 
-		vec2 current = find_lowest_node_by_fScore(openSet, fScore);
+		shared_ptr<sf::Vector2f> current = find_lowest_node_by_fScore(openSet, fScore);
 		if (current == goal) {
 			return reconstruct_path(cameFrom, current);
 		}
-		cout << "Current: " << current << endl;
-		cout << "OpenSet: " << endl;
-		for (auto i : openSet)
-			cout << "\t" << i << endl;
-		std::vector<vec2>::iterator findInOpenSet =
+		//cout << "Current: " << *current << endl;
+		//cout << "OpenSet: " << endl;
+		//for (auto i : openSet)
+			//cout << "\t" << *i << endl;
+		std::vector<shared_ptr<sf::Vector2f>>::iterator findInOpenSet =
 			std::find(openSet.begin(), openSet.end(), current);
 
 		openSet.erase(findInOpenSet);
 		closedSet.push_back(current);
-		cout << "ClosedSet: " << endl;
-		for (auto i : closedSet)
-			cout << "\t" << i << endl;
+		//cout << "ClosedSet: " << endl;
+		//for (auto i : closedSet)
+			//cout << "\t" << i << endl;
 
-		std::vector<vec2> neighbours = getNeighbours(current);
-		for (vec2 neighbour : neighbours) {
+		std::vector<shared_ptr<sf::Vector2f>> neighbours = getNeighbours(current);
+		for (auto neighbour : neighbours) {
 
-			std::list<vec2>::iterator findInClosedSet =
+			std::list<shared_ptr<sf::Vector2f>>::iterator findInClosedSet =
 				std::find(closedSet.begin(), closedSet.end(), neighbour);
 
 			if (findInClosedSet != closedSet.end()) {
@@ -751,7 +751,7 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 
 			// The distance from start to a neighbour
 			double tentative_gScore;
-			std::map<vec2, double>::iterator findInGScore = gScore.find(current);
+			std::map<shared_ptr<sf::Vector2f>, double>::iterator findInGScore = gScore.find(current);
 			if (findInGScore != gScore.end()) 
 			{
 				tentative_gScore = heuristic_cost_estimate(start, neighbour);
@@ -761,7 +761,7 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 				tentative_gScore = gScore[current] + heuristic_cost_estimate(current, neighbour);
 			}
 
-			std::vector<vec2>::iterator findInOpenSet =
+			std::vector<shared_ptr<sf::Vector2f>>::iterator findInOpenSet =
 				std::find(openSet.begin(), openSet.end(), neighbour);
 			if (findInOpenSet == openSet.end()) {
 				openSet.push_back(neighbour);
@@ -773,37 +773,37 @@ std::vector<vec2> A_Star(sf::RenderWindow& window, vec2 start, vec2 goal) {
 			// This path is the best until now. Record it!
 			cameFrom.insert(std::make_pair(neighbour, current));
 			gScore.insert(std::make_pair(neighbour, tentative_gScore));
-			pair<std::map<vec2, double>::iterator, bool> insert = fScore.insert(
+			pair<std::map<shared_ptr<sf::Vector2f>, double>::iterator, bool> insert = fScore.insert(
 				std::make_pair(neighbour, gScore[neighbour] + heuristic_cost_estimate(
 					neighbour, goal)));
 		}
 		display_route_in_progress(window, closedSet, openSet, gScore, fScore, current, goal);
 	}
-	return std::vector<vec2>();
+	return std::vector<shared_ptr<sf::Vector2f>>();
 }
 
 int main(int argc, char **argv)
 {
-	obstacles.push_back(vec2(2, 0));
-	obstacles.push_back(vec2(2, 1));
-	obstacles.push_back(vec2(2, 2));
-	obstacles.push_back(vec2(2, 3));
-	obstacles.push_back(vec2(2, 4));
-	obstacles.push_back(vec2(2, 5));
-	obstacles.push_back(vec2(2, 6));
-	obstacles.push_back(vec2(2, 7));
-	//obstacles.push_back(vec2(2, 8));
+	obstacles.push_back(sf::Vector2f(2, 0));
+	obstacles.push_back(sf::Vector2f(2, 1));
+	obstacles.push_back(sf::Vector2f(2, 2));
+	obstacles.push_back(sf::Vector2f(2, 3));
+	obstacles.push_back(sf::Vector2f(2, 4));
+	obstacles.push_back(sf::Vector2f(2, 5));
+	obstacles.push_back(sf::Vector2f(2, 6));
+	obstacles.push_back(sf::Vector2f(2, 7));
+	//obstacles.push_back(sf::Vector2f(2, 8));
 
 	int map[screenHeight/cellHeightWidth][screenWidth/cellHeightWidth];
 
-	vec2 start = vec2(0, 0);
-	vec2 end = vec2(mapHeight-1, mapWidth-1);
+	shared_ptr<sf::Vector2f> start = make_shared<sf::Vector2f>(0, 0);
+	shared_ptr<sf::Vector2f> end = make_shared<sf::Vector2f>(mapHeight-1, mapWidth-1);
 
 	if (argc == 5) {
-		start.first  = atoi(argv[1]);
-		start.second = atoi(argv[2]);
-		end.first    = atoi(argv[3]);
-		end.second   = atoi(argv[4]);
+		start->x  = atoi(argv[1]);
+		start->y = atoi(argv[2]);
+		end->x    = atoi(argv[3]);
+		end->y   = atoi(argv[4]);
 	}
 
 	// create the window
@@ -830,7 +830,7 @@ int main(int argc, char **argv)
 
 	for (size_t i = 0; i < levelTracker.enemyNumber; i++)
 	{
-		preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first + 20, start.second + 20), levelTracker.enemyHealth, levelTracker.enemySpeed));
+		preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start->x + 20, start->y + 20), levelTracker.enemyHealth, levelTracker.enemySpeed));
 	}
 
 	for (int e = 0; e < 1; e++)
@@ -862,17 +862,17 @@ int main(int argc, char **argv)
 										screenWidth - goalTexture.getSize().y / 2));
 
 	//Find Path to Goal
-	std::vector<vec2> completed_path = A_Star(window, start, end);
+	std::vector<shared_ptr<sf::Vector2f>> completed_path = A_Star(window, start, end);
 
 	//Give Path to Enemies
 	auto ite = enemies.begin();
 	auto itp = preppedEnemies.begin();
 	for (int e = 0; e < 1; e++)
 	{
-		for (vec2 v : completed_path)
+		for (shared_ptr<sf::Vector2f> v : completed_path)
 		{
-			ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
-			itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+			ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v->x * cellHeightWidth, v->y * cellHeightWidth));
+			itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v->x * cellHeightWidth, v->y * cellHeightWidth));
 		}
 		ite++;
 		itp++;
@@ -912,7 +912,7 @@ int main(int argc, char **argv)
 			// ResetEnemies
 			for (size_t i = 0; i < levelTracker.enemyNumber; i++)
 			{
-				preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start.first, start.second), levelTracker.enemyHealth, levelTracker.enemySpeed));
+				preppedEnemies.push_back(make_shared<Enemy>(sf::Vector2f(start->x, start->y), levelTracker.enemyHealth, levelTracker.enemySpeed));
 			}
 		}
 
@@ -955,7 +955,7 @@ int main(int argc, char **argv)
 
 						turrets.push_back(temp);
 						map[mouseCellX][mouseCellY] = 1;
-						obstacles.push_back(vec2(mouseCellX, mouseCellY));
+						obstacles.push_back(sf::Vector2f(mouseCellX, mouseCellY));
 						// New obstacle = new path needed
 						completed_path = A_Star(window, start, end);
 						ite = enemies.begin();
@@ -964,9 +964,9 @@ int main(int argc, char **argv)
 						{
 							ite->get()->currentPath.clear();
 
-							for (vec2 v : completed_path)
+							for (auto v : completed_path)
 							{
-								ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+								ite->get()->currentPath.insert(ite->get()->currentPath.begin(), sf::Vector2f(v->x * cellHeightWidth, v->y * cellHeightWidth));
 							}
 
 							//need to find current nearest step in the path and remove eveything before it
@@ -989,9 +989,9 @@ int main(int argc, char **argv)
 						while (itp != preppedEnemies.end())
 						{
 							itp->get()->currentPath.clear();
-							for (vec2 v : completed_path)
+							for (auto v : completed_path)
 							{
-								itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v.first * cellHeightWidth, v.second * cellHeightWidth));
+								itp->get()->currentPath.insert(itp->get()->currentPath.begin(), sf::Vector2f(v->x * cellHeightWidth, v->y * cellHeightWidth));
 							}
 							itp++;
 						}
