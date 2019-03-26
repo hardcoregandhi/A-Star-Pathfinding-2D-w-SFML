@@ -4,7 +4,6 @@
 class ParticleSystem : public sf::Drawable, public sf::Transformable
 {
 public:
-
 	ParticleSystem(unsigned int count) :
 		m_particles(count),
 		m_vertices(sf::Points, count),
@@ -13,6 +12,13 @@ public:
 	{
 	}
 
+	void setColor(int r, int g, int b)
+	{
+		for (std::size_t i = 0; i < m_particles.size(); ++i)
+		{
+			m_vertices[i].color = sf::Color(r, g, b, m_vertices[i].color.a);
+		}
+	}
 	void setEmitter(sf::Vector2f position)
 	{
 		m_emitter = position;

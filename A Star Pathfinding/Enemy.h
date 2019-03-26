@@ -1,4 +1,5 @@
 #pragma once
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -8,7 +9,6 @@
 #include <vector>
 #include <math.h>
 
-#include "Enemy.h"
 #include "Constants.h"
 class Enemy {
 public:

@@ -1,17 +1,35 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="ParticleSystem.cpp" />
-    <ClCompile Include="VectorMath.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="Turret.cpp" />
+    <ClCompile Include="Bullet.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="VectorMath.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Turret.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{8081d41a-efab-433d-9d23-a7d7dcee11ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{6fb48ceb-8180-40f5-9874-81bf5c10c6a1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{089714d6-9b85-4de4-8316-08fe308b9953}</UniqueIdentifier>
     </Filter>
@@ -37,9 +55,20 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="Constants.h" />
-    <ClInclude Include="Bullet.h" />
-    <ClInclude Include="Turret.h" />
+    <ClInclude Include="Bullet.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Pathfinding.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Turret.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
