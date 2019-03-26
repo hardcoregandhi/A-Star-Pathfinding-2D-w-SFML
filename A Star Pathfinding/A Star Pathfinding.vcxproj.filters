@@ -4,6 +4,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="VectorMath.cpp" />
+    <ClCompile Include="Enemy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -32,5 +33,9 @@
     <Image Include="Resources\output-49.png">
       <Filter>Resources</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Constants.h" />
   </ItemGroup>
 </Project>
